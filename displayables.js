@@ -124,7 +124,17 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 {
     'construct': function( context )
     {
+        // DO NOT REMOVE THIS SCRATCHPAD LINE
         this.shared_scratchpad    = context.shared_scratchpad;
+        //
+        
+        
+        // TODO:
+        //      Create shapes needed for drawing here
+        
+        
+        shapes_in_use.sphere = new Cube();
+        
         
 //        this.cubeRotateOn = false;
 //        this.textureRotateOn = false;
@@ -278,6 +288,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.lastDrawTime = time;
         
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
+        
+        
+        var modelTransform = mat4();
+        shapes_in_use.sphere.draw(this.shared_scratchpad.graphics_state, modelTransform, new Material(Color(1, 1, 1, 1), 1, .4, .8, 1));
         
     }
 }, Animation );
