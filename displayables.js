@@ -134,6 +134,97 @@ function generateRotateFunction(RPM, rotationAxis) {
     };
 }
 
+function generateTranslateFunction(translateVectorPerSecond) {
+    return function(node, deltaTime) {
+        var transVec = [
+            translateVectorPerSecond[0] * deltaTime,
+            translateVectorPerSecond[1] * deltaTime,
+            translateVectorPerSecond[2] * deltaTime
+        ];
+        node.localMatrix = mult(
+            translation(
+                transVec[0],
+                transVec[1],
+                transVec[2]
+            ),
+            node.localMatrix
+        );
+    };
+}
+
+function generateNode(in_shape, in_material, in_scaleVec, in_rotateAngle, in_rotateVec, in_translationVec) {
+    return new SceneGraphNode(
+            in_shape,
+            in_material,
+            in_localMatrix =
+                mult(
+                    translation(
+                        in_translationVec[0],
+                        in_translationVec[1],
+                        in_translationVec[2]
+                    ),
+                    mult(
+                        rotation(
+                            in_rotateAngle,
+                            [
+                                in_rotateVec[0],
+                                in_rotateVec[1],
+                                in_rotateVec[2]   
+                            ]
+                        ),
+                        scale(
+                            in_scaleVec[0],
+                            in_scaleVec[1],
+                            in_scaleVec[2]
+                        )
+                    )
+                )
+        
+//                mult(
+//                    scale(
+//                        in_scaleVec[0],
+//                        in_scaleVec[1],
+//                        in_scaleVec[2]
+//                    ),
+//                    mult(
+//                        rotation(
+//                            in_rotateAngle,
+//                            [
+//                                in_rotateVec[0],
+//                                in_rotateVec[1],
+//                                in_rotateVec[2]   
+//                            ]
+//                        ),
+//                        translation(
+//                            in_translationVec[0],
+//                            in_translationVec[1],
+//                            in_translationVec[2]
+//                        )
+//                    )
+//                )
+        );
+}
+
+function generateNode_wall(in_material, in_wallScaleVec, in_raiseRate = 0, in_startY = 0, in_startRotAngle = 0) {
+    var radius = (3/2)*in_wallScaleVec[0];
+    var radians = in_startRotAngle * (Math.PI/180);
+    var temp = generateNode(
+        shapes_in_use.cube,
+        in_material,
+        in_wallScaleVec,
+        in_startRotAngle, [0, 1, 0],
+        [radius * Math.cos(radians), in_startY, radius * Math.sin(radians)]
+//        [(3/2)*in_wallScaleVec[0], in_startY, 0]
+    );
+    temp.updateFunctions.push(
+        generateTranslateFunction(
+            [0, in_raiseRate * in_wallScaleVec[1], 0]
+        )
+    );
+    
+    return temp;
+}
+
 
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
@@ -146,12 +237,14 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.shared_scratchpad    = context.shared_scratchpad;
         //
         
+        this.deltaTime = 0;
+        this.lastDrawTime = 0;
+        
         
         // TODO:
         //      Create shapes needed for drawing here
-        
-//        shapes_in_use.cylinder = new Cube();
-        shapes_in_use.cylinder = new Cylindrical_Tube(100, 100);
+        shapes_in_use.cylinder = new Cylindrical_Tube(50, 50);
+        shapes_in_use.cube = new Cube();
         
         
         // Scene Graph
@@ -161,102 +254,53 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // Nodes
         this.sceneGraphNodes = [];
         
+        // Central Rotation
+        this.cylinder_RPM = -10;
+        
         // Central Cylinder
-        var node_cylinder = new SceneGraphNode(
+        this.cylinder_scaleX = 4;
+        this.cylinder_scaleY = 18;
+        this.cylinder_scaleZ = 4;
+        this.node_cylinder = new SceneGraphNode(
             shapes_in_use.cylinder,
             new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100, "candy-cane-wallpaper-25.png"),
-            in_localMatrix = mult(scale(5, 18, 5), rotation(90, [1, 0, 0]))
+            in_localMatrix = mult(
+                scale(
+                    this.cylinder_scaleX,
+                    this.cylinder_scaleY,
+                    this.cylinder_scaleZ
+                ),
+                rotation(90, [1, 0, 0])
+            )
         );
-        node_cylinder.updateFunctions.push(generateRotateFunction(-10, [0, 1, 0]));
-        this.sceneGraphBaseNode.addChild(node_cylinder);
-//        this.sceneGraphNodes.push(
-//            new SceneGraphNode(
-//                shapes_in_use.cylinder,
-//                new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100)
-//            )
-//        );
+        this.node_cylinder.updateFunctions.push(
+            generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
+        );
+        this.sceneGraphBaseNode.addChild(this.node_cylinder);
         
         
+        // Path Items Translation
+        
+        this.wallSpawnInterval = 5;                     // In seconds
+        
+        this.timeSinceLastPathItemCreation = 0;         // In seconds
+        
+        this.wallStartRotAngle = 0;
+        
+        
+        // Wall
+        this.nodes_pathRotations = [];
+        this.nodes_pathItems = [];
+        
+        this.wall_scaleX = 1;
+        this.wall_scaleY = 1.4;
+        this.wall_scaleZ = 0.1;
+        this.wall_scaleVec = [this.wall_scaleX, this.wall_scaleY, this.wall_scaleZ];
         
         // END: Nodes
         
         // END: Scene Graph
         
-        
-//        this.cubeRotateOn = false;
-//        this.textureRotateOn = false;
-//        this.textureScrollOn = false;
-//        
-//        // Add cube to shapes in use
-//        shapes_in_use.cube = new Cube();
-//        
-//        // Set up node properties
-//        this.nodeLocalMatrices = [
-//            translation(-4, 0, 0),
-//            translation(4, 0, 0),
-//            mat4(),
-//            mat4()
-//        ];
-//        this.nodeMaterials = [
-//            null,
-//            null,
-//            new Material(Color(0, 0, 0, 1), 1, 1, 1, 1, pic1),
-//            new Material(Color(0, 0, 0, 1), 1, 1, 1, 1, pic2)
-//        ];
-//        this.nodeShapes = [
-//            null,
-//            null,
-//            shapes_in_use.cube,
-//            shapes_in_use.cube
-//        ];
-//        this.nodeUseGouraud = [false, false, false, false];
-//        this.nodeRPMs = [null, null, 20, 30];
-//        this.nodeRotationAxis = [null, null, [0, 1, 0], [1, 0, 0]];
-//        
-//        this.nodeTexTransform = [null, null, mat4(), scale(2, 2, 2)];
-//        
-//        this.nodeTexRPM = [null, null, 15, 0];
-//        this.nodeTexTranslate = [null, null, 0, 1];
-//        
-//        this.parentNodes = [-1, -1, 0, 1];
-//        
-//        // Instantiate base scene graph node
-//        this.sceneGraphBaseNode = new SceneGraphNode(
-//            mat4(),
-//            null,
-//            null,
-//            false
-//        );
-//        
-//        // Instantiate scene graph nodes
-//        this.sceneGraphNodes = [];
-//        for (var i = 0; i < this.parentNodes.length; ++i) {
-//            this.sceneGraphNodes.push(
-//                new SceneGraphNode(
-//                    this.nodeLocalMatrices[i],
-//                    this.nodeMaterials[i],
-//                    this.nodeShapes[i],
-//                    this.nodeUseGouraud[i],
-//                    this.nodeTexTransform[i]
-//                )
-//            );
-//            
-//            this.sceneGraphNodes[i].RPM = this.nodeRPMs[i];
-//            this.sceneGraphNodes[i].rotationAxis = this.nodeRotationAxis[i];
-//            
-//            this.sceneGraphNodes[i].textureRPM = this.nodeTexRPM[i];
-//            this.sceneGraphNodes[i].textureTranslation = this.nodeTexTranslate[i];
-//            
-//            if (this.parentNodes[i] >= 0) {
-//                this.sceneGraphNodes[
-//                    this.parentNodes[i]
-//                ].addChild(
-//                    this.sceneGraphNodes[i]
-//                );
-//            } else {
-//                this.sceneGraphBaseNode.addChild(this.sceneGraphNodes[i]);
-//            }
-//        }
         
     },
     
@@ -280,13 +324,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     
     'drawSceneGraph' : function (deltaTime, rootNode) {
         if (rootNode) {
-//            if (typeof rootNode.performUpdate === "function") {
-//                var args = {};
-//                args["cubeRotateOn"] = this.cubeRotateOn;
-//                args["textureRotateOn"] = this.textureRotateOn;
-//                args["textureScrollOn"] = this.textureScrollOn;
-//                rootNode.performUpdate(deltaTime, args);
-//            }
             
             for (var i = 0; i < rootNode.updateFunctions.length; ++i) {
                 rootNode.updateFunctions[i](rootNode, deltaTime);
@@ -326,24 +363,52 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        this.shared_scratchpad.graphics_state.lights.push(new Light(vec4(10, 10, 10, 1), Color(1, 0, 0, 1), 100000));
         
         // Point lighting from inside sun
-        graphics_state.lights.push(new Light(vec4(100, 100, 0, 1), Color(1, 0, 0, 1), 100000));
+        graphics_state.lights.push(new Light(vec4(100, 100, 0, 1), Color(1, 1, 1, 1), 100000));
         
         // Extra light source below sun just to light up sun's geometry so it doesn't look so bland and like a circle
 //        graphics_state.lights.push(new Light(vec4(0, 0, 0, 1), Color(1, 1, 1, 1), 100000));
-
-            
-        if(this.lastDrawTime) {
-            this.deltaTime = (time - this.lastDrawTime)/1000.0;
-        } else {
-            this.deltaTime = 0;
-        }
+        
+        
+        
+        // Get delta time for animation
+        this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
         
+        
+        // Create next wall node if necessary
+        
+        this.timeSinceLastPathItemCreation += this.deltaTime;
+        if (this.timeSinceLastPathItemCreation >= this.wallSpawnInterval) {
+            
+            var tempPlacement = new SceneGraphNode(
+                null, null,
+                in_localMatrix = translation(this.cylinder_scaleX, 0, 0)
+            );
+            tempPlacement.updateFunctions.push(
+                generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
+            );
+            this.sceneGraphBaseNode.addChild(tempPlacement);
+            
+            
+            var temp = generateNode_wall(
+                new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+                this.wall_scaleVec,
+                1,
+                -11 + (this.wall_scaleVec[1])
+            );
+            tempPlacement.addChild(temp);
+            
+            this.timeSinceLastPathItemCreation = 0;
+        }
+        
+        
+        // Remove Walls that have risen above the top
+        for (var i = 0; i < this.nodes_pathItems; ++i) {
+            // TODO: Figure out how to remove walls if they cross the upper boundary
+            // TODO:        Possibly use collision detection with invisible boundary/polygon at the top (maybe a giant square or circle)
+        }
+        
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
-        
-        
-//        var modelTransform = mat4();
-//        shapes_in_use.sphere.draw(this.shared_scratchpad.graphics_state, modelTransform, new Material(Color(1, 1, 1, 1), 1, .4, .8, 100));
         
     }
 }, Animation );
