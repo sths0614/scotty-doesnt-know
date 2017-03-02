@@ -6,7 +6,7 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
         this.shared_scratchpad = context.shared_scratchpad;
         
         // 1st parameter below is our starting camera matrix.  2nd is the projection:  The matrix that determines how depth is treated.  It projects 3D points onto a plane.
-        this.shared_scratchpad.graphics_state = new Graphics_State( translation(0, 0,-10), perspective(50, canvas.width/canvas.height, .1, 1000), 0 );
+        this.shared_scratchpad.graphics_state = new Graphics_State( translation(0, 0,-20), perspective(50, canvas.width/canvas.height, .1, 1000), 0 );
         this.define_data_members( { graphics_state: this.shared_scratchpad.graphics_state, thrust: vec3(), origin: vec3( 0, 0, 0 ), looking: false } );
     },
     
@@ -37,7 +37,7 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
 
 
 // Scene Graph node stuff
-var SceneGraphNode = function(in_localMatrix, in_material, in_shape, in_useGouraud = false, in_texTransform = mat4()) {
+var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatrix = mat4(), in_useGouraud = false, in_texTransform = mat4()) {
     // Store local matrix used in local world. Needs to be updated externally as appropriate
     this.localMatrix = in_localMatrix;
     
@@ -62,10 +62,15 @@ var SceneGraphNode = function(in_localMatrix, in_material, in_shape, in_useGoura
     // Stores list of child nodes to draw as part of this world matrix
     this.children = [];
     
+    // Store list of update functions to be called if necessary
+    //      Each must take as an argument a SceneGraphNode and a deltaTime
+    this.updateFunctions = [];
+    
+    
     
     // Update function to be called during draw if needed to update matrices, etc.
-    this.performUpdate = function(deltaTime, args) {
-        
+//    this.performUpdate = function(deltaTime, args) {
+//        
 //        if (args["cubeRotateOn"] && (this.RPM)) {
 //            var rotAngle = (this.RPM * deltaTime * 360 / 60) % 360;
 //            this.localMatrix = mult(
@@ -99,8 +104,8 @@ var SceneGraphNode = function(in_localMatrix, in_material, in_shape, in_useGoura
 //                this.textureTransform
 //            );
 //        }
-        
-    };
+//        
+//    };
     
     
     // helper function for adding children
@@ -119,11 +124,24 @@ var SceneGraphNode = function(in_localMatrix, in_material, in_shape, in_useGoura
     }
 };
 
+function generateRotateFunction(RPM, rotationAxis) {
+    return function(node, deltaTime) {
+        var rotAngle = (RPM * deltaTime * 360 / 60) % 360;
+        node.localMatrix = mult(
+            rotation(rotAngle,
+                     (rotationAxis ? rotationAxis : [0, 1, 0])),
+            node.localMatrix);
+    };
+}
+
 
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
     'construct': function( context )
     {
+        // Note:
+        // T * R * S
+        
         // DO NOT REMOVE THIS SCRATCHPAD LINE
         this.shared_scratchpad    = context.shared_scratchpad;
         //
@@ -132,8 +150,37 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // TODO:
         //      Create shapes needed for drawing here
         
+//        shapes_in_use.cylinder = new Cube();
+        shapes_in_use.cylinder = new Cylindrical_Tube(100, 100);
         
-        shapes_in_use.sphere = new Cube();
+        
+        // Scene Graph
+        
+        this.sceneGraphBaseNode = new SceneGraphNode();
+        
+        // Nodes
+        this.sceneGraphNodes = [];
+        
+        // Central Cylinder
+        var node_cylinder = new SceneGraphNode(
+            shapes_in_use.cylinder,
+            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100, "candy-cane-wallpaper-25.png"),
+            in_localMatrix = mult(scale(5, 18, 5), rotation(90, [1, 0, 0]))
+        );
+        node_cylinder.updateFunctions.push(generateRotateFunction(-10, [0, 1, 0]));
+        this.sceneGraphBaseNode.addChild(node_cylinder);
+//        this.sceneGraphNodes.push(
+//            new SceneGraphNode(
+//                shapes_in_use.cylinder,
+//                new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100)
+//            )
+//        );
+        
+        
+        
+        // END: Nodes
+        
+        // END: Scene Graph
         
         
 //        this.cubeRotateOn = false;
@@ -174,12 +221,12 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        this.parentNodes = [-1, -1, 0, 1];
 //        
 //        // Instantiate base scene graph node
-        this.sceneGraphBaseNode = new SceneGraphNode(
-            mat4(),
-            null,
-            null,
-            false
-        );
+//        this.sceneGraphBaseNode = new SceneGraphNode(
+//            mat4(),
+//            null,
+//            null,
+//            false
+//        );
 //        
 //        // Instantiate scene graph nodes
 //        this.sceneGraphNodes = [];
@@ -241,6 +288,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //                rootNode.performUpdate(deltaTime, args);
 //            }
             
+            for (var i = 0; i < rootNode.updateFunctions.length; ++i) {
+                rootNode.updateFunctions[i](rootNode, deltaTime);
+            }
+            
             var modelTransform = rootNode.localMatrix;
             if (rootNode.parent) {
                 modelTransform = mult(rootNode.parent.currWorldMatrix, modelTransform);
@@ -272,9 +323,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // *** Lights: *** Values of vector or point lights over time.  Arguments to construct a Light(): position or vector (homogeneous coordinates), color, size
         // If you want more than two lights, you're going to need to increase a number in the vertex shader file (index.html).  For some reason this won't work in Firefox.
         graphics_state.lights = [];                    // First clear the light list each frame so we can replace & update lights.
+//        this.shared_scratchpad.graphics_state.lights.push(new Light(vec4(10, 10, 10, 1), Color(1, 0, 0, 1), 100000));
         
         // Point lighting from inside sun
-//        graphics_state.lights.push(new Light(vec4(this.position_sun[0], this.position_sun[1], this.position_sun[2], 1), this.color_sun, 100000));
+        graphics_state.lights.push(new Light(vec4(100, 100, 0, 1), Color(1, 0, 0, 1), 100000));
         
         // Extra light source below sun just to light up sun's geometry so it doesn't look so bland and like a circle
 //        graphics_state.lights.push(new Light(vec4(0, 0, 0, 1), Color(1, 1, 1, 1), 100000));
@@ -290,8 +342,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
         
         
-        var modelTransform = mat4();
-        shapes_in_use.sphere.draw(this.shared_scratchpad.graphics_state, modelTransform, new Material(Color(1, 1, 1, 1), 1, .4, .8, 1));
+//        var modelTransform = mat4();
+//        shapes_in_use.sphere.draw(this.shared_scratchpad.graphics_state, modelTransform, new Material(Color(1, 1, 1, 1), 1, .4, .8, 100));
         
     }
 }, Animation );
