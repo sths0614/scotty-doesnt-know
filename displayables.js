@@ -245,6 +245,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         //      Create shapes needed for drawing here
         shapes_in_use.cylinder = new Cylindrical_Tube(50, 50);
         shapes_in_use.cube = new Cube();
+        shapes_in_use.sphere = new Subdivision_Sphere(3);
         
         
         // Scene Graph
@@ -297,9 +298,38 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.wall_scaleZ = 0.1;
         this.wall_scaleVec = [this.wall_scaleX, this.wall_scaleY, this.wall_scaleZ];
         
+        
+        // Ball
+        this.node_ball = new SceneGraphNode(
+            shapes_in_use.sphere,
+            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+            translation(0, 0, this.cylinder_scaleZ)
+        );
+        this.node_ball.updateFunctions.push(
+            generateRotateFunction(this.cylinder_RPM, [0, 0, 1])
+        );
+        
+        this.sceneGraphBaseNode.addChild(this.node_ball);
+        
         // END: Nodes
         
         // END: Scene Graph
+        
+        
+        
+        // Testing
+        
+        // Curve from Surface_Of_Revolution
+        var rows = 100;
+        var columns = 100;
+        var points = [];
+        for (var i = 0; i < 10; i+=0.1){
+            points.push(vec3(i, 5*i, 0));
+        }
+        shapes_in_use.testingCurve = new Surface_Of_Revolution( rows, columns, points)
+        //
+        
+        //
         
         
     },
@@ -409,6 +439,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         }
         
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
+//        shapes_in_use.testingCurve.draw(graphics_state, mult(rotation(80, [1, 0, 0]), scale(0.1, 0.1, 0.1)), new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100));
+        
         
     }
 }, Animation );
