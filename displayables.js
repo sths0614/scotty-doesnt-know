@@ -107,7 +107,10 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 ////                    )
 ////                )
 
-
+var GravityTime = 0;
+var BallYPos = 0;
+var CEILING = 10;
+var FLOOR = 0;
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
     'construct': function( context )
@@ -185,10 +188,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_ball = new SceneGraphNode(
             shapes_in_use.sphere,
             new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
-            translation(0, 0, this.cylinder_scaleZ)
+            translation(0, -5, this.cylinder_scaleZ)
         );
         this.node_ball.updateFunctions.push(
-            this.generateRotateFunction(this.cylinder_RPM, [0, 0, 1])
+            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
         );
         
         this.sceneGraphBaseNode.addChild(this.node_ball);
@@ -218,9 +221,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     
     'init_keys': function( controls )   // init_keys():  Define any extra keyboard shortcuts here
     {
-//        controls.add("r", this, function() {
-//            this.cubeRotateOn = !this.cubeRotateOn;
-//        });
+       controls.add("space", this, function() {
+            GravityTime = 0;
+       });
 //        
 //        controls.add("t", this, function() {
 //            this.textureRotateOn = !this.textureRotateOn;
@@ -326,7 +329,43 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
     },
     
-    
+    'generateGravityFunction' : function(u, g) {
+        // s(t) = ut + 1/2gt^2
+        // v(t) = u + gt
+        return function(node, deltaTime) {
+            GravityTime += deltaTime;
+            console.log(GravityTime);
+
+            // change in y in either direction
+            var dy = u + g * GravityTime;
+
+            // ball hits upperbound
+            if (BallYPos + dy >= CEILING) {
+                dy = CEILING - BallYPos;
+                BallYPos = CEILING;
+            }
+
+            // ball hits lower bound
+            else if (BallYPos + dy <= FLOOR) {
+                dy = FLOOR - BallYPos;
+                BallYPos = FLOOR;
+            }
+
+            // ball changes by dy 
+            else {
+                BallYPos += dy;
+            }
+
+            node.localMatrix = mult(
+                translation(
+                    0, 
+                    dy,
+                    0
+                ),
+                node.localMatrix
+            );
+        };
+    },
     'generateRotateFunction' : function(RPM, rotationAxis) {
         return function(node, deltaTime) {
             var rotAngle = (RPM * deltaTime * 360 / 60) % 360;
