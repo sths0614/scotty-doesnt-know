@@ -7,6 +7,7 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
         
         // 1st parameter below is our starting camera matrix.  2nd is the projection:  The matrix that determines how depth is treated.  It projects 3D points onto a plane.
         this.shared_scratchpad.graphics_state = new Graphics_State( translation(0, 0,-20), perspective(50, canvas.width/canvas.height, .1, 1000), 0 );
+//        this.shared_scratchpad.graphics_state = new Graphics_State( translation(0, 0,-10), perspective(50, canvas.width/canvas.height, .1, 1000), 0 );
         this.define_data_members( { graphics_state: this.shared_scratchpad.graphics_state, thrust: vec3(), origin: vec3( 0, 0, 0 ), looking: false } );
     },
     
@@ -67,47 +68,6 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     this.updateFunctions = [];
     
     
-    
-    // Update function to be called during draw if needed to update matrices, etc.
-//    this.performUpdate = function(deltaTime, args) {
-//        
-//        if (args["cubeRotateOn"] && (this.RPM)) {
-//            var rotAngle = (this.RPM * deltaTime * 360 / 60) % 360;
-//            this.localMatrix = mult(
-//                rotation(rotAngle,
-//                         (this.rotationAxis ? this.rotationAxis : [0, 1, 0])),
-//                this.localMatrix);
-//        }
-//        
-//        // Peform texture rotation
-//        if (args["textureRotateOn"] && (this.textureRPM)) {
-//            var rotAngle = (this.RPM * deltaTime * 360 / 60) % 360;
-//            this.textureTransform = mult(
-//                translation([-0.5, -0.5, 0]),
-//                this.textureTransform
-//            );
-//            this.textureTransform = mult(
-//                rotation(rotAngle, [0, 0, 1]),
-//                this.textureTransform
-//            );
-//            this.textureTransform = mult(
-//                translation([0.5, 0.5, 0]),
-//                this.textureTransform
-//            );
-//        }
-//        
-//        // Perform texture scrolling
-//        if (args["textureScrollOn"] && this.textureTranslation) {
-//            var transAmount = (this.textureTranslation * deltaTime);
-//            this.textureTransform = mult(
-//                translation([-transAmount, -transAmount, 0]),
-//                this.textureTransform
-//            );
-//        }
-//        
-//    };
-    
-    
     // helper function for adding children
     this.addChild = function(childNode) {
         this.children.push(childNode);
@@ -124,106 +84,28 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     }
 };
 
-function generateRotateFunction(RPM, rotationAxis) {
-    return function(node, deltaTime) {
-        var rotAngle = (RPM * deltaTime * 360 / 60) % 360;
-        node.localMatrix = mult(
-            rotation(rotAngle,
-                     (rotationAxis ? rotationAxis : [0, 1, 0])),
-            node.localMatrix);
-    };
-}
-
-function generateTranslateFunction(translateVectorPerSecond) {
-    return function(node, deltaTime) {
-        var transVec = [
-            translateVectorPerSecond[0] * deltaTime,
-            translateVectorPerSecond[1] * deltaTime,
-            translateVectorPerSecond[2] * deltaTime
-        ];
-        node.localMatrix = mult(
-            translation(
-                transVec[0],
-                transVec[1],
-                transVec[2]
-            ),
-            node.localMatrix
-        );
-    };
-}
-
-function generateNode(in_shape, in_material, in_scaleVec, in_rotateAngle, in_rotateVec, in_translationVec) {
-    return new SceneGraphNode(
-            in_shape,
-            in_material,
-            in_localMatrix =
-                mult(
-                    translation(
-                        in_translationVec[0],
-                        in_translationVec[1],
-                        in_translationVec[2]
-                    ),
-                    mult(
-                        rotation(
-                            in_rotateAngle,
-                            [
-                                in_rotateVec[0],
-                                in_rotateVec[1],
-                                in_rotateVec[2]   
-                            ]
-                        ),
-                        scale(
-                            in_scaleVec[0],
-                            in_scaleVec[1],
-                            in_scaleVec[2]
-                        )
-                    )
-                )
-        
-//                mult(
-//                    scale(
-//                        in_scaleVec[0],
-//                        in_scaleVec[1],
-//                        in_scaleVec[2]
-//                    ),
-//                    mult(
-//                        rotation(
-//                            in_rotateAngle,
-//                            [
-//                                in_rotateVec[0],
-//                                in_rotateVec[1],
-//                                in_rotateVec[2]   
-//                            ]
-//                        ),
-//                        translation(
-//                            in_translationVec[0],
-//                            in_translationVec[1],
-//                            in_translationVec[2]
-//                        )
-//                    )
-//                )
-        );
-}
-
-function generateNode_wall(in_material, in_wallScaleVec, in_raiseRate = 0, in_startY = 0, in_startRotAngle = 0) {
-    var radius = (3/2)*in_wallScaleVec[0];
-    var radians = in_startRotAngle * (Math.PI/180);
-    var temp = generateNode(
-        shapes_in_use.cube,
-        in_material,
-        in_wallScaleVec,
-        in_startRotAngle, [0, 1, 0],
-        [radius * Math.cos(radians), in_startY, radius * Math.sin(radians)]
-//        [(3/2)*in_wallScaleVec[0], in_startY, 0]
-    );
-    temp.updateFunctions.push(
-        generateTranslateFunction(
-            [0, in_raiseRate * in_wallScaleVec[1], 0]
-        )
-    );
-    
-    return temp;
-}
+////                mult(
+////                    scale(
+////                        in_scaleVec[0],
+////                        in_scaleVec[1],
+////                        in_scaleVec[2]
+////                    ),
+////                    mult(
+////                        rotation(
+////                            in_rotateAngle,
+////                            [
+////                                in_rotateVec[0],
+////                                in_rotateVec[1],
+////                                in_rotateVec[2]   
+////                            ]
+////                        ),
+////                        translation(
+////                            in_translationVec[0],
+////                            in_translationVec[1],
+////                            in_translationVec[2]
+////                        )
+////                    )
+////                )
 
 
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
@@ -275,7 +157,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             )
         );
         this.node_cylinder.updateFunctions.push(
-            generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
+            this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
         );
         this.sceneGraphBaseNode.addChild(this.node_cylinder);
         
@@ -306,7 +188,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             translation(0, 0, this.cylinder_scaleZ)
         );
         this.node_ball.updateFunctions.push(
-            generateRotateFunction(this.cylinder_RPM, [0, 0, 1])
+            this.generateRotateFunction(this.cylinder_RPM, [0, 0, 1])
         );
         
         this.sceneGraphBaseNode.addChild(this.node_ball);
@@ -415,12 +297,12 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 in_localMatrix = translation(this.cylinder_scaleX, 0, 0)
             );
             tempPlacement.updateFunctions.push(
-                generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
+                this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
             );
             this.sceneGraphBaseNode.addChild(tempPlacement);
             
             
-            var temp = generateNode_wall(
+            var temp = this.generateNode_wall(
                 new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
                 this.wall_scaleVec,
                 1,
@@ -442,5 +324,88 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        shapes_in_use.testingCurve.draw(graphics_state, mult(rotation(80, [1, 0, 0]), scale(0.1, 0.1, 0.1)), new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100));
         
         
+    },
+    
+    
+    'generateRotateFunction' : function(RPM, rotationAxis) {
+        return function(node, deltaTime) {
+            var rotAngle = (RPM * deltaTime * 360 / 60) % 360;
+            node.localMatrix = mult(
+                rotation(rotAngle,
+                         (rotationAxis ? rotationAxis : [0, 1, 0])),
+                node.localMatrix);
+        };
+    },
+    
+    
+    'generateTranslateFunction' : function(translateVectorPerSecond) {
+        return function(node, deltaTime) {
+            var transVec = [
+                translateVectorPerSecond[0] * deltaTime,
+                translateVectorPerSecond[1] * deltaTime,
+                translateVectorPerSecond[2] * deltaTime
+            ];
+            node.localMatrix = mult(
+                translation(
+                    transVec[0],
+                    transVec[1],
+                    transVec[2]
+                ),
+                node.localMatrix
+            );
+        };
+    },
+    
+    'generateNode' : function(in_shape, in_material, in_scaleVec, in_rotateAngle, in_rotateVec, in_translationVec) {
+        return new SceneGraphNode(
+                in_shape,
+                in_material,
+                in_localMatrix =
+                    mult(
+                        translation(
+                            in_translationVec[0],
+                            in_translationVec[1],
+                            in_translationVec[2]
+                        ),
+                        mult(
+                            rotation(
+                                in_rotateAngle,
+                                [
+                                    in_rotateVec[0],
+                                    in_rotateVec[1],
+                                    in_rotateVec[2]   
+                                ]
+                            ),
+                            scale(
+                                in_scaleVec[0],
+                                in_scaleVec[1],
+                                in_scaleVec[2]
+                            )
+                        )
+                    )
+            );
+    },
+    
+    
+    'generateNode_wall' : function(in_material, in_wallScaleVec, in_raiseRate = 0, in_startY = 0, in_startRotAngle = 0) {
+        var radius = (3/2)*in_wallScaleVec[0];
+        var radians = in_startRotAngle * (Math.PI/180);
+        var temp = this.generateNode(
+            shapes_in_use.cube,
+            in_material,
+            in_wallScaleVec,
+            in_startRotAngle, [0, 1, 0],
+            [radius * Math.cos(radians), in_startY, radius * Math.sin(radians)]
+    //        [(3/2)*in_wallScaleVec[0], in_startY, 0]
+        );
+        temp.updateFunctions.push(
+            this.generateTranslateFunction(
+                [0, in_raiseRate * in_wallScaleVec[1], 0]
+            )
+        );
+
+        return temp;
     }
+    
+    
 }, Animation );
