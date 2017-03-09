@@ -6,8 +6,8 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
         this.shared_scratchpad = context.shared_scratchpad;
         
         // 1st parameter below is our starting camera matrix.  2nd is the projection:  The matrix that determines how depth is treated.  It projects 3D points onto a plane.
-//        this.shared_scratchpad.graphics_state = new Graphics_State( translation(0, 0,-20), perspective(50, canvas.width/canvas.height, .1, 1000), 0 );
-        this.shared_scratchpad.graphics_state = new Graphics_State( translation(-2, 0, -20), perspective(10, canvas.width/canvas.height, .1, 1000), 0 );
+        this.shared_scratchpad.graphics_state = new Graphics_State( translation(0, 0,-20), perspective(50, canvas.width/canvas.height, .1, 1000), 0 );
+//        this.shared_scratchpad.graphics_state = new Graphics_State( translation(-2, 0, -20), perspective(10, canvas.width/canvas.height, .1, 1000), 0 );
         this.define_data_members( { graphics_state: this.shared_scratchpad.graphics_state, thrust: vec3(), origin: vec3( 0, 0, 0 ), looking: false } );
     },
     
