@@ -215,7 +215,12 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         //
         
         //
-        
+        if (hasGetUserMedia()) {
+          // Good to go!
+          alert('yup!');
+        } else {
+          alert('getUserMedia() is not supported in your browser');
+        }
         
     },
     
@@ -448,3 +453,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     
     
 }, Animation );
+
+function hasGetUserMedia() {
+  return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia || navigator.msGetUserMedia);
+}
+
