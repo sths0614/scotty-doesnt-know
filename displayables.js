@@ -133,20 +133,34 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         //      Create shapes needed for drawing here
 //        shapes_in_use.cylinder = new Cylindrical_Tube(50, 50);
 //        shapes_in_use.cube = new Cube();
-        shapes_in_use.sphere = new Subdivision_Sphere(4);
+        shapes_in_use.sphere = new Subdivision_Sphere(5);
         
         
         // Scene Graph
         
         this.sceneGraphBaseNode = new SceneGraphNode();
         
+        // Material Syntax
+//        color, ambient, diffusivity, shininess, smoothness, texture_filename
+        
         // Nodes
         this.sceneGraphNodes = [];
         
+        this.planet_scale = 30;
+        this.planet_RPM = 3;
         this.node_planet = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.5, 0.6, 0.3, 100, "earthmap1-test.jpg"),
-            in_localMatrix = mult(rotation(180, [0, 0, 1]), scale(3, 3, 3))
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "earthmap1-test.jpg"),
+            in_localMatrix = mult(
+                mult(
+                    translation(0, -(1.1)*this.planet_scale, 0),
+                    rotation(90, [0, 0, 1])
+                ),
+                scale(this.planet_scale, this.planet_scale, this.planet_scale)
+            )
+        );
+        this.node_planet.updateFunctions.push(
+            this.generateRotateFunction(this.planet_RPM, [0, 1, 0])
         );
         this.sceneGraphBaseNode.addChild(this.node_planet);
         
@@ -274,6 +288,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        this.shared_scratchpad.graphics_state.lights.push(new Light(vec4(10, 10, 10, 1), Color(1, 0, 0, 1), 100000));
         
         // Point lighting from inside sun
+//        graphics_state.lights.push(new Light(vec4(100, 100, 0, 1), Color(1, 1, 1, 1), 1000000000000000));
         graphics_state.lights.push(new Light(vec4(100, 100, 0, 1), Color(1, 1, 1, 1), 100000));
         
         // Extra light source below sun just to light up sun's geometry so it doesn't look so bland and like a circle
