@@ -148,21 +148,28 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.planet_scale = 30;
         this.planet_RPM = 3;
-        this.node_planet = new SceneGraphNode(
-            shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "earthmap1-test.jpg"),
+        this.node_planetFrame = new SceneGraphNode(
+            null,
+            null,
             in_localMatrix = mult(
-                mult(
-                    translation(0, -(1.1)*this.planet_scale, 0),
-                    rotation(90, [0, 0, 1])
-                ),
+//                mult(
+//                    translation(0, -(1.1)*this.planet_scale, 0),
+//                    rotation(90, [0, 0, 1])
+//                ),
+                translation(0, -(1.1)*this.planet_scale, 0),
                 scale(this.planet_scale, this.planet_scale, this.planet_scale)
             )
         );
-        this.node_planet.updateFunctions.push(
-            this.generateRotateFunction(this.planet_RPM, [0, 1, 0])
+        this.sceneGraphBaseNode.addChild(this.node_planetFrame);
+        
+        this.node_planet = new SceneGraphNode(
+            shapes_in_use.sphere,
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "earthmap1-test.jpg")
         );
-        this.sceneGraphBaseNode.addChild(this.node_planet);
+        this.node_planet.updateFunctions.push(
+            this.generateRotateFunction(this.planet_RPM, [0, 0, 1])
+        );
+        this.node_planetFrame.addChild(this.node_planet);
         
 //        // Central Rotation
 //        this.cylinder_RPM = -10;
@@ -226,7 +233,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         if (hasGetUserMedia()) {
           // Good to go!
-          alert('yup!');
+//          alert('yup!');
         } else {
           alert('getUserMedia() is not supported in your browser');
         }
