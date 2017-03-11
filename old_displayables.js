@@ -38,7 +38,7 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
 
 
 // Scene Graph node stuff
-var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatrix = mat4(), in_useGouraud = false, in_texTransform = mat4(), in_shaderName = "Default") {
+var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatrix = mat4(), in_useGouraud = false, in_texTransform = mat4()) {
     // Store local matrix used in local world. Needs to be updated externally as appropriate
     this.localMatrix = in_localMatrix;
     
@@ -56,9 +56,6 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     
     // Store type of smooth shading to use
     this.useGouraud = in_useGouraud;
-    
-    // Store shader to use
-    this.shaderName = in_shaderName;
     
     // Store parent node reference for easy access
     this.parent = null;
@@ -131,9 +128,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         // TODO:
         //      Create shapes needed for drawing here
-//        shapes_in_use.cylinder = new Cylindrical_Tube(50, 50);
-//        shapes_in_use.cube = new Cube();
-        shapes_in_use.sphere = new Subdivision_Sphere(4);
+        shapes_in_use.cylinder = new Cylindrical_Tube(50, 50);
+        shapes_in_use.cube = new Cube();
+        shapes_in_use.sphere = new Subdivision_Sphere(3);
         
         
         // Scene Graph
@@ -143,72 +140,82 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // Nodes
         this.sceneGraphNodes = [];
         
-        this.node_planet = new SceneGraphNode(
-            shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.5, 0.6, 0.3, 100, "earthmap1-test.jpg"),
-            in_localMatrix = mult(rotation(180, [0, 0, 1]), scale(3, 3, 3))
-        );
-        this.sceneGraphBaseNode.addChild(this.node_planet);
+        // Central Rotation
+        this.cylinder_RPM = -10;
         
-//        // Central Rotation
-//        this.cylinder_RPM = -10;
-//        
-//        // Central Cylinder
-//        this.cylinder_scaleX = 4;
-//        this.cylinder_scaleY = 18;
-//        this.cylinder_scaleZ = 4;
-//        this.node_cylinder = new SceneGraphNode(
-//            shapes_in_use.cylinder,
-//            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100, "candy-cane-wallpaper-25.png"),
-//            in_localMatrix = mult(
-//                scale(
-//                    this.cylinder_scaleX,
-//                    this.cylinder_scaleY,
-//                    this.cylinder_scaleZ
-//                ),
-//                rotation(90, [1, 0, 0])
-//            )
-//        );
-//        this.node_cylinder.updateFunctions.push(
-//            this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
-//        );
-//        this.sceneGraphBaseNode.addChild(this.node_cylinder);
-//        
-//        
-//        // Path Items Translation
-//        
-//        this.wallSpawnInterval = 5;                     // In seconds
-//        
-//        this.timeSinceLastPathItemCreation = 0;         // In seconds
-//        
-//        this.wallStartRotAngle = 0;
-//        
-//        
-//        // Wall
-//        this.nodes_pathRotations = [];
-//        this.nodes_pathItems = [];
-//        
-//        this.wall_scaleX = 1;
-//        this.wall_scaleY = 1.4;
-//        this.wall_scaleZ = 0.1;
-//        this.wall_scaleVec = [this.wall_scaleX, this.wall_scaleY, this.wall_scaleZ];
-//        
-//        
-//        // Ball
-//        this.node_ball = new SceneGraphNode(
-//            shapes_in_use.sphere,
-//            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
-//            translation(0, -5, this.cylinder_scaleZ)
-//        );
-//        this.node_ball.updateFunctions.push(
-//            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
-//        );
-//        
-//        this.sceneGraphBaseNode.addChild(this.node_ball);
+        // Central Cylinder
+        this.cylinder_scaleX = 4;
+        this.cylinder_scaleY = 18;
+        this.cylinder_scaleZ = 4;
+        this.node_cylinder = new SceneGraphNode(
+            shapes_in_use.cylinder,
+            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100, "candy-cane-wallpaper-25.png"),
+            in_localMatrix = mult(
+                scale(
+                    this.cylinder_scaleX,
+                    this.cylinder_scaleY,
+                    this.cylinder_scaleZ
+                ),
+                rotation(90, [1, 0, 0])
+            )
+        );
+        this.node_cylinder.updateFunctions.push(
+            this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
+        );
+        this.sceneGraphBaseNode.addChild(this.node_cylinder);
+        
+        
+        // Path Items Translation
+        
+        this.wallSpawnInterval = 5;                     // In seconds
+        
+        this.timeSinceLastPathItemCreation = 0;         // In seconds
+        
+        this.wallStartRotAngle = 0;
+        
+        
+        // Wall
+        this.nodes_pathRotations = [];
+        this.nodes_pathItems = [];
+        
+        this.wall_scaleX = 1;
+        this.wall_scaleY = 1.4;
+        this.wall_scaleZ = 0.1;
+        this.wall_scaleVec = [this.wall_scaleX, this.wall_scaleY, this.wall_scaleZ];
+        
+        
+        // Ball
+        this.node_ball = new SceneGraphNode(
+            shapes_in_use.sphere,
+            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+            translation(0, -5, this.cylinder_scaleZ)
+        );
+        this.node_ball.updateFunctions.push(
+            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
+        );
+        
+        this.sceneGraphBaseNode.addChild(this.node_ball);
         
         // END: Nodes
         
         // END: Scene Graph
+        
+        
+        
+        // Testing
+        
+        // Curve from Surface_Of_Revolution
+        var rows = 100;
+        var columns = 100;
+        var points = [];
+        for (var i = 0; i < 10; i+=0.1){
+            points.push(vec3(i, 5*i, 0));
+        }
+        shapes_in_use.testingCurve = new Surface_Of_Revolution( rows, columns, points)
+        //
+        
+        //
+        
         
     },
     
@@ -244,9 +251,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             rootNode.currWorldMatrix = modelTransform;
             
             if (rootNode.shape) {
-                
-                shaders_in_use[rootNode.shaderName].activate();
-                
                 var tempTexTransform = mat4();
                 if (rootNode.textureTransform) {
                     tempTexTransform = rootNode.textureTransform;
@@ -266,7 +270,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     {
         var graphics_state  = this.shared_scratchpad.graphics_state,
             model_transform = mat4();             // We have to reset model_transform every frame, so that as each begins, our basis starts as the identity.
-//        shaders_in_use[ "Default" ].activate();
+        shaders_in_use[ "Default" ].activate();
 
         // *** Lights: *** Values of vector or point lights over time.  Arguments to construct a Light(): position or vector (homogeneous coordinates), color, size
         // If you want more than two lights, you're going to need to increase a number in the vertex shader file (index.html).  For some reason this won't work in Firefox.
@@ -288,36 +292,36 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         // Create next wall node if necessary
         
-//        this.timeSinceLastPathItemCreation += this.deltaTime;
-//        if (this.timeSinceLastPathItemCreation >= this.wallSpawnInterval) {
-//            
-//            var tempPlacement = new SceneGraphNode(
-//                null, null,
-//                in_localMatrix = translation(this.cylinder_scaleX, 0, 0)
-//            );
-//            tempPlacement.updateFunctions.push(
-//                this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
-//            );
-//            this.sceneGraphBaseNode.addChild(tempPlacement);
-//            
-//            
-//            var temp = this.generateNode_wall(
-//                new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
-//                this.wall_scaleVec,
-//                1,
-//                -11 + (this.wall_scaleVec[1])
-//            );
-//            tempPlacement.addChild(temp);
-//            
-//            this.timeSinceLastPathItemCreation = 0;
-//        }
-//        
-//        
-//        // Remove Walls that have risen above the top
-//        for (var i = 0; i < this.nodes_pathItems; ++i) {
-//            // TODO: Figure out how to remove walls if they cross the upper boundary
-//            // TODO:        Possibly use collision detection with invisible boundary/polygon at the top (maybe a giant square or circle)
-//        }
+        this.timeSinceLastPathItemCreation += this.deltaTime;
+        if (this.timeSinceLastPathItemCreation >= this.wallSpawnInterval) {
+            
+            var tempPlacement = new SceneGraphNode(
+                null, null,
+                in_localMatrix = translation(this.cylinder_scaleX, 0, 0)
+            );
+            tempPlacement.updateFunctions.push(
+                this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
+            );
+            this.sceneGraphBaseNode.addChild(tempPlacement);
+            
+            
+            var temp = this.generateNode_wall(
+                new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+                this.wall_scaleVec,
+                1,
+                -11 + (this.wall_scaleVec[1])
+            );
+            tempPlacement.addChild(temp);
+            
+            this.timeSinceLastPathItemCreation = 0;
+        }
+        
+        
+        // Remove Walls that have risen above the top
+        for (var i = 0; i < this.nodes_pathItems; ++i) {
+            // TODO: Figure out how to remove walls if they cross the upper boundary
+            // TODO:        Possibly use collision detection with invisible boundary/polygon at the top (maybe a giant square or circle)
+        }
         
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
 //        shapes_in_use.testingCurve.draw(graphics_state, mult(rotation(80, [1, 0, 0]), scale(0.1, 0.1, 0.1)), new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100));

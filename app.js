@@ -11,7 +11,8 @@ window.onload = function init() {
     shaders_in_use["Default"] = new Phong_or_Gouraud_Shader(graphicsState);
     
     var textureNames = [];
-    textureNames.push("res/candy-cane-wallpaper-25.png");
+//    textureNames.push("res/candy-cane-wallpaper-25.png");
+    textureNames.push("res/earthmap1-test.jpg");
     
     for (var i = 0; i < textureNames.length; ++i) {
         textures_in_use[textureNames[i]] = new Texture(textureNames[i], true);
