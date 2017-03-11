@@ -71,7 +71,7 @@ function getRawFrequencyData() {
         rawFrequencyData = new Uint8Array(audioAnalyzer.frequencyBinCount);
         audioAnalyzer.getByteFrequencyData(rawFrequencyData);
     } else {
-        rawFrequencyData = new Uint8Array(2);
+        rawFrequencyData = new Uint8Array(0);
     }
 //    console.log("Frequency Data: " + rawFrequencyData);
     return rawFrequencyData;

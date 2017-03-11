@@ -335,10 +335,13 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         var rawFreqData = getRawFrequencyData();
         var numBins = rawFreqData.length;
 //        var numBins = rawFreqData.length();
-        var sumAmplitude;
-        for (var i = 0; i < numBins; i++) {
-            sumAmplitude += rawFreqData[i];
+        var sumAmplitude = 0;
+        for (let amp of rawFreqData) {
+            sumAmplitude += amp;
         }
+//        for (var i = 0; i < numBins; i++) {
+//            sumAmplitude += rawFreqData[i];
+//        }
         console.log(sumAmplitude);
 
         // var barFreqData = getBarFrequencyData();
