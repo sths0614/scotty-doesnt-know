@@ -224,6 +224,12 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         // END: Scene Graph
         
+        if (hasGetUserMedia()) {
+          // Good to go!
+          alert('yup!');
+        } else {
+          alert('getUserMedia() is not supported in your browser');
+        }
     },
     
     'init_keys': function( controls )   // init_keys():  Define any extra keyboard shortcuts here
@@ -338,6 +344,20 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        shapes_in_use.testingCurve.draw(graphics_state, mult(rotation(80, [1, 0, 0]), scale(0.1, 0.1, 0.1)), new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100));
         
         
+        var rawFreqData = getRawFrequencyData();
+        var sumAmplitude = 0;
+        for (let amp of rawFreqData) {
+            sumAmplitude += amp;
+        }
+        console.log(sumAmplitude);
+
+        // var barFreqData = getBarFrequencyData();
+        // var numBins = barFreqData.length();
+        // var sumAmplitude;
+        // for (var i = 0; i < numBins; i++) {
+        //     sumAmplitude += barFreqData[i];
+        // }
+        // console.log(sumAmplitude);
     },
     
     'generateGravityFunction' : function(u, g) {
@@ -345,7 +365,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // v(t) = u + gt
         return function(node, deltaTime) {
             GravityTime += deltaTime;
-            console.log(GravityTime);
+            // console.log(GravityTime);
 
             // change in y in either direction
             var dy = u + g * GravityTime;
@@ -459,3 +479,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     
     
 }, Animation );
+
+function hasGetUserMedia() {
+  return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia || navigator.msGetUserMedia);
+}
+
