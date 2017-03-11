@@ -1,6 +1,6 @@
 "use strict";
 
-// var audioContext;
+var audioContext;
 var audioSource;
 var filter;
 
@@ -24,13 +24,13 @@ function setupAudio() {
         console.log('Reeeejected!', e);
     };
 
-    var audioContext = new AudioContext();
+    audioContext = new AudioContext();
 
     // Not showing vendor prefixes.
-    navigator.getUserMedia({video: true, audio: true}, function(localMediaStream) {
+    navigator.getUserMedia({video: false, audio: true}, function(localMediaStream) {
         // TODO: remove video elements
-        var video = document.querySelector('video');
-        video.src = window.URL.createObjectURL(localMediaStream);
+//        var video = document.querySelector('video');
+//        video.src = window.URL.createObjectURL(localMediaStream);
 
         // TODO: may need 2 identical source for 2 connects
         audioSource = audioContext.createMediaStreamSource(localMediaStream);
@@ -55,9 +55,11 @@ function setupAudio() {
 
         // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
         // See crbug.com/110938.
-        video.onloadedmetadata = function(e) {
-          // Ready to go. Do some stuff.
-        };
+//        video.onloadedmetadata = function(e) {
+//          // Ready to go. Do some stuff.
+//        };
+        
+        
     }, errorCallback);
     console.log(audioContext);
     console.log(audioSource);
@@ -65,7 +67,13 @@ function setupAudio() {
 }
 
 function getRawFrequencyData() {
-    audioAnalyzer.getByteFrequencyData(rawFrequencyData);
+    if (audioAnalyzer) {
+        rawFrequencyData = new Uint8Array(audioAnalyzer.frequencyBinCount);
+        audioAnalyzer.getByteFrequencyData(rawFrequencyData);
+    } else {
+        rawFrequencyData = new Uint8Array(2);
+    }
+//    console.log("Frequency Data: " + rawFrequencyData);
     return rawFrequencyData;
 }
 
