@@ -78,7 +78,13 @@ function getRawFrequencyData() {
 }
 
 function getBarFrequencyData() {
-    barAudioAnalyzer.getByteFrequencyData(barFrequencyData);
+    if (barAudioAnalyzer) {
+        barFrequencyData = new Uint8Array(barAudioAnalyzer.frequencyBinCount);
+        barAudioAnalyzer.getByteFrequencyData(barFrequencyData);
+    } else {
+        barFrequencyData = new Uint8Array(0);
+
+    }
     return barFrequencyData;
 }
 
