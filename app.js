@@ -12,11 +12,17 @@ var barAudioAnalyzer;
 var barFrequencyData;
 
 var mainCanvas;
+var glCanvas;
 var graphicsState;
 
 window.onload = function init() {
     setupAudio();
     setupCanvas();
+}
+
+window.onresize = function() {
+    glCanvas.width = window.innerWidth;
+    glCanvas.height = window.innerHeight;
 }
 
 function setupAudio() {
@@ -50,8 +56,8 @@ function setupAudio() {
         barAudioAnalyzer.fftSize = freqData_fftSize;
         barFrequencyData = new Uint8Array(barAudioAnalyzer.frequencyBinCount);
 
-        console.log(audioAnalyzer.frequencyBinCount);
-        console.log(barAudioAnalyzer.frequencyBinCount);   
+        // console.log(audioAnalyzer.frequencyBinCount);
+        // console.log(barAudioAnalyzer.frequencyBinCount);   
 
         // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
         // See crbug.com/110938.
@@ -61,9 +67,9 @@ function setupAudio() {
         
         
     }, errorCallback);
-    console.log(audioContext);
-    console.log(audioSource);
-    console.log(audioAnalyzer);
+    // console.log(audioContext);
+    // console.log(audioSource);
+    // console.log(audioAnalyzer);
 }
 
 function getRawFrequencyData() {
@@ -89,6 +95,10 @@ function getBarFrequencyData() {
 }
 
 function setupCanvas() {
+    glCanvas = document.getElementById("gl-canvas");
+    glCanvas.width = window.innerWidth;
+    glCanvas.height = window.innerHeight;
+
     mainCanvas = new Canvas_Manager("gl-canvas", Color(0, 0, 0, 1)),
          graphicsState = mainCanvas.shared_scratchpad.graphics_state;
     

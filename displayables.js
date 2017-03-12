@@ -367,15 +367,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         for (let amp of rawFreqData) {
             sumAmplitude += amp;
         }
-//        console.log(sumAmplitude);
-
-        // var barFreqData = getBarFrequencyData();
-        // var numBins = barFreqData.length();
-        // var sumAmplitude;
-        // for (var i = 0; i < numBins; i++) {
-        //     sumAmplitude += barFreqData[i];
-        // }
-        // console.log(sumAmplitude);
+        
     },
     
     'generateGravityFunction' : function(u, g) {
