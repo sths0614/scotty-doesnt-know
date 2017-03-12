@@ -161,7 +161,12 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.node_planet = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.8, 0.9, 0.8, 20, "res/planet.jpg") //"res/earthmap1-test.jpg")
+            new Material(Color(0, 0, 0, 1), 0.8, 0.9, 0.8, 20, "res/planet.jpg"), //"res/earthmap1-test.jpg")
+            mat4(),
+            false,
+            mat4(),
+            "Default",
+            false
         );
         this.node_planet.updateFunctions.push(
             this.generateRotateFunction(this.planet_RPM, [0, 0, 1])
