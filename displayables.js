@@ -114,11 +114,21 @@ var GravityTime = 0;
 var BallYPos = 0;
 var CEILING = 10;
 var FLOOR = 0;
-var EXHAUST_HISTORY_ARRAY_SIZE = 97; // 10 seconds
-var NUM_EXHAUST_CLUSTERS = 8;
+var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
+var NUM_EXHAUST_CLUSTERS = 20;
 var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
 var ExhaustHistory = [];
 var curExhaustIndex = 0;
+
+// TODO
+var totalDistance = 8;
+var distanceIncrement = totalDistance/NUM_EXHAUST_CLUSTERS;
+var maxScale = 0.50;
+var minScale = 0.08;
+var scaleDecrement = (maxScale - minScale) / NUM_EXHAUST_CLUSTERS;
+var exhaust_material = new Material(Color(0.3, 0.3, 0.3, 1.0), .6, .2, 0, 20, "res/smoke.jpg");
+// var exhaust_material = new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100);
+
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
     'construct': function( context )
@@ -171,7 +181,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.node_planet = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "earthmap1-test.jpg")
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/earthmap1-test.jpg")
         );
         this.node_planet.updateFunctions.push(
             this.generateRotateFunction(this.planet_RPM, [0, 0, 1])
@@ -181,13 +191,14 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.node_objectsFrame = new SceneGraphNode(
             null,
-            null
+            null,
+            translation(-11, 0, 0)
         );
         this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
         this.node_spaceship = new SceneGraphNode(
             shapes_in_use.testing_shape,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "earthmap1-test.jpg"),
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/earthmap1-test.jpg"),
             mat4(),
             false,
             mat4(),
@@ -254,13 +265,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        
 //        this.sceneGraphBaseNode.addChild(this.node_ball);
         
-        
-        var dx = [-2, -4, -6, -8, -10, -12, -14, -16, -18];
-        var scales = [0.22, 0.20, 0.18, 0.16, 0.14, 0.12, 0.10, 0.08, 0.06];
-
-
-        for (var i = 0; i < 8; i++) {
-            this.generateNode_exhaustCluster(dx[i], scales[i], i);   
+        for (var i = 0; i < NUM_EXHAUST_CLUSTERS; i++) {
+            this.generateNode_exhaustCluster(
+                0 - (i + 1) *distanceIncrement,
+                minScale + i * scaleDecrement, 
+                i);   
         }
 
 
@@ -438,10 +447,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 ),
                 node.localMatrix
             );
-            console.log(dy);
-            console.log(curExhaustIndex);
+            // console.log(dy);
+            // console.log(curExhaustIndex);
             ExhaustHistory[curExhaustIndex] = dy;
-            console.log(ExhaustHistory);
+            // console.log(ExhaustHistory);
         };
     },
     'generateRotateFunction' : function(RPM, rotationAxis) {
@@ -475,14 +484,17 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     
     'generateClusterMovementFunction' : function(exhaust_cluster_index) {
         return function(node, deltaTime) {
-            var index = curExhaustIndex -  2 * exhaust_cluster_index;
+            var index = curExhaustIndex -  DELAY_FACTOR * exhaust_cluster_index;
             if (index < 0) {
                 index += EXHAUST_HISTORY_ARRAY_SIZE;
             }
+            var dy = ExhaustHistory[index];
+            // var rand = (Math.random() * 0.1) - 0.05;
+            // dy += rand;
             node.localMatrix = mult(
                 translation(
                     0,
-                    ExhaustHistory[index],
+                    dy,
                     0
                 ),
                 node.localMatrix
@@ -549,25 +561,25 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 
         this.node_exhausts[0] = new SceneGraphNode(
            shapes_in_use.sphere,
-           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           exhaust_material,
            translation(0, 1, 0)
         );
         
         this.node_exhausts[1] = new SceneGraphNode(
            shapes_in_use.sphere,
-           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           exhaust_material,
            translation(0, -1, 0)
         );
 
         this.node_exhausts[2] = new SceneGraphNode(
            shapes_in_use.sphere,
-           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           exhaust_material,
            translation(-1, 0, 0)
         );
 
         this.node_exhausts[3] = new SceneGraphNode(
            shapes_in_use.sphere,
-           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           exhaust_material,
            translation(1, 0, 0)
         );
 

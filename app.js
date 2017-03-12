@@ -108,6 +108,8 @@ function setupCanvas() {
     var textureNames = [];
 //    textureNames.push("res/candy-cane-wallpaper-25.png");
     textureNames.push("res/earthmap1-test.jpg");
+    textureNames.push("res/smoke.jpg");
+    textureNames.push("res/smoke.png");
     
     for (var i = 0; i < textureNames.length; ++i) {
         textures_in_use[textureNames[i]] = new Texture(textureNames[i], true);
