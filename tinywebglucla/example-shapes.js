@@ -109,14 +109,30 @@ Declare_Any_Class( "Text_Line", // Draws a rectangle textured with images of ASC
           Square.prototype.insert_transformed_copy_into( this, [], object_transform );
           object_transform = mult( object_transform, translation( 1.5, 0, 0 ));
         }
+       
+//       Shape.prototype.draw.call(this, graphics_state, model_transform, new Material( Color(0, 0, 0, 1), 1, 0, 0, 40, "text.png" ) );
       },
-    'draw': function( graphics_state, model_transform, heads_up_display, color )
-      { if( heads_up_display )      { gl.disable( gl.DEPTH_TEST );  }
+//    'draw': function( graphics_state, model_transform, heads_up_display, color )
+//      { if( heads_up_display )      { gl.disable( gl.DEPTH_TEST );  }
+//        Shape.prototype.draw.call(this, graphics_state, model_transform, new Material( color, 1, 0, 0, 40, "text.png" ) );
+//        if( heads_up_display )      { gl.enable(  gl.DEPTH_TEST );  }
+//      },
+   
+   'draw': function( graphics_state, model_transform, color = Color(0, 0, 0, 1), heads_up_display = true)
+      {
+          if( heads_up_display )      { gl.disable( gl.DEPTH_TEST );  }
         Shape.prototype.draw.call(this, graphics_state, model_transform, new Material( color, 1, 0, 0, 40, "text.png" ) );
         if( heads_up_display )      { gl.enable(  gl.DEPTH_TEST );  }
       },
+   
+   
     'set_string': function( line )
-      { for( var i = 0; i < this.max_size; i++ )
+      {
+          if (!this.graphics_card_buffers) {
+              return;
+          }
+          
+          for( var i = 0; i < this.max_size; i++ )
           {
             var row = Math.floor( ( i < line.length ? line.charCodeAt( i ) : ' '.charCodeAt() ) / 16 ),
                 col = Math.floor( ( i < line.length ? line.charCodeAt( i ) : ' '.charCodeAt() ) % 16 );

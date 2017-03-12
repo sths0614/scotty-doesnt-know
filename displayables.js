@@ -137,6 +137,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
 //        shapes_in_use["shape_asteroid"] = new Shape_From_File("res/CHALLENGER71.obj");
         
+        shapes_in_use["shape_text"] = new Text_Line(35);
+        
         // Scene Graph
         
         this.sceneGraphBaseNode = new SceneGraphNode();
@@ -239,6 +241,23 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.sceneGraphBaseNode.addChild(this.node_testingstuff);
         
         
+//        shapes_in_use.shape_text.set_string("hello");
+        this.node_text = new SceneGraphNode(
+            shapes_in_use["shape_text"],
+            Color(0, 0, 0, 1),
+            mat4(),
+            false,
+            null,
+            "Default",
+            false
+        );
+        this.node_text.updateFunctions.push(
+            function(node, deltaTime) {
+                shapes_in_use.shape_text.set_string("hello");
+        });
+        this.sceneGraphBaseNode.addChild(this.node_text);
+        
+        
         // END: Nodes
         
         // END: Scene Graph
@@ -281,7 +300,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     tempTexTransform = rootNode.textureTransform;
                 }
                 this.shared_scratchpad.graphics_state.gouraud = rootNode.useGouraud;
-                rootNode.body.shape.draw(this.shared_scratchpad.graphics_state, modelTransform, rootNode.material, tempTexTransform);
+                
+                if (tempTexTransform)
+                    rootNode.body.shape.draw(this.shared_scratchpad.graphics_state, modelTransform, rootNode.material, tempTexTransform);
+                else
+                    rootNode.body.shape.draw(this.shared_scratchpad.graphics_state, modelTransform, rootNode.material);
                 
                 rootNode.body.location_matrix = modelTransform;
             }
