@@ -151,7 +151,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // TODO:
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
-        shapes_in_use["testing_shape"] = new Shape_From_File("res/CHALLENGER71.obj");
+        shapes_in_use["testing_shape"] = new Shape_From_File("res/asteroid/asteroid.obj");
+//        shapes_in_use["testing_shape"] = new Shape_From_File("res/CHALLENGER71.obj");
         
         // Scene Graph
         
@@ -181,14 +182,31 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.node_planet = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/earthmap1-test.jpg")
+            new Material(Color(0, 0, 0, 1), 0.8, 0.9, 0.8, 20, "res/planet.jpg") //"res/earthmap1-test.jpg")
         );
         this.node_planet.updateFunctions.push(
             this.generateRotateFunction(this.planet_RPM, [0, 0, 1])
         );
         this.node_planetFrame.addChild(this.node_planet);
         
+        this.test_scale = 20;
+        this.test_backgroundFrame = new SceneGraphNode(
+            null,
+            null,
+            in_localMatrix = scale(this.test_scale, this.test_scale, this.test_scale)
+        );
         
+        this.sceneGraphBaseNode.addChild(this.test_backgroundFrame);
+        this.test_background = new SceneGraphNode(
+             shapes_in_use.sphere,
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/sky8.jpg")
+        );
+        this.test_backgroundFrame .updateFunctions.push(
+            this.generateRotateFunction(this.planet_RPM, [0, 1, 0])
+        );
+        this.test_backgroundFrame.addChild(this.test_background);
+
+
         this.node_objectsFrame = new SceneGraphNode(
             null,
             null,
@@ -196,13 +214,14 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
+        
         this.node_spaceship = new SceneGraphNode(
             shapes_in_use.testing_shape,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/earthmap1-test.jpg"),
-            mat4(),
+            new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/asteroid/ast4.jpg"),
+            scale(0.8, 0.8, 0.8),
             false,
             mat4(),
-            "Default"
+            "Bump Map"
         );
         this.node_spaceship.updateFunctions.push(
            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity

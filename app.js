@@ -110,6 +110,10 @@ function setupCanvas() {
     textureNames.push("res/earthmap1-test.jpg");
     textureNames.push("res/smoke.jpg");
     textureNames.push("res/smoke.png");
+  //  textureNames.push("res/earthmap1-test.jpg");
+     textureNames.push("res/planet.jpg");
+    textureNames.push("res/asteroid/ast4.jpg");
+    textureNames.push("res/sky8.jpg");
     
     for (var i = 0; i < textureNames.length; ++i) {
         textures_in_use[textureNames[i]] = new Texture(textureNames[i], true);
