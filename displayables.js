@@ -114,6 +114,11 @@ var GravityTime = 0;
 var BallYPos = 0;
 var CEILING = 10;
 var FLOOR = 0;
+var EXHAUST_HISTORY_ARRAY_SIZE = 97; // 10 seconds
+var NUM_EXHAUST_CLUSTERS = 8;
+var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
+var ExhaustHistory = [];
+var curExhaustIndex = 0;
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
     'construct': function( context )
@@ -128,7 +133,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.deltaTime = 0;
         this.lastDrawTime = 0;
         
-        
+        // this.EXHAUST_HISTORY_ARRAY_SIZE = 600;
+        // ExhaustHistory = new Float32Array(this.EXHAUST_HISTORY_ARRAY_SIZE);
+        for (var i = 0; i < EXHAUST_HISTORY_ARRAY_SIZE; ++i) {
+           ExhaustHistory[i] = 0;
+        }
         // TODO:
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
@@ -246,15 +255,13 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        this.sceneGraphBaseNode.addChild(this.node_ball);
         
         
-        this.generateNode_exhaustCluster(-2, 0.22);
-        this.generateNode_exhaustCluster(-4, 0.20);
-        this.generateNode_exhaustCluster(-6, 0.18);
-        this.generateNode_exhaustCluster(-8, 0.16);
-        this.generateNode_exhaustCluster(-10, 0.14);
-        this.generateNode_exhaustCluster(-12, 0.12);
-        this.generateNode_exhaustCluster(-14, 0.10);
-        this.generateNode_exhaustCluster(-16, 0.08);
-        this.generateNode_exhaustCluster(-18, 0.06);    
+        var dx = [-2, -4, -6, -8, -10, -12, -14, -16, -18];
+        var scales = [0.22, 0.20, 0.18, 0.16, 0.14, 0.12, 0.10, 0.08, 0.06];
+
+
+        for (var i = 0; i < 8; i++) {
+            this.generateNode_exhaustCluster(dx[i], scales[i], i);   
+        }
 
 
 
@@ -350,6 +357,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
         
+        curExhaustIndex = (curExhaustIndex + 1) % EXHAUST_HISTORY_ARRAY_SIZE;
         
         // Create next wall node if necessary
         
@@ -393,7 +401,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         for (let amp of rawFreqData) {
             sumAmplitude += amp;
         }
-        
     },
     
     'generateGravityFunction' : function(u, g) {
@@ -431,6 +438,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 ),
                 node.localMatrix
             );
+            console.log(dy);
+            console.log(curExhaustIndex);
+            ExhaustHistory[curExhaustIndex] = dy;
+            console.log(ExhaustHistory);
         };
     },
     'generateRotateFunction' : function(RPM, rotationAxis) {
@@ -462,6 +473,24 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         };
     },
     
+    'generateClusterMovementFunction' : function(exhaust_cluster_index) {
+        return function(node, deltaTime) {
+            var index = curExhaustIndex -  2 * exhaust_cluster_index;
+            if (index < 0) {
+                index += EXHAUST_HISTORY_ARRAY_SIZE;
+            }
+            node.localMatrix = mult(
+                translation(
+                    0,
+                    ExhaustHistory[index],
+                    0
+                ),
+                node.localMatrix
+            );
+        };
+    },
+
+
     'generateNode' : function(in_shape, in_material, in_scaleVec, in_rotateAngle, in_rotateVec, in_translationVec) {
         return new SceneGraphNode(
                 in_shape,
@@ -513,7 +542,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         return temp;
     },
 
-    'generateNode_exhaustCluster' : function(dx, exhaust_scale) {
+    'generateNode_exhaustCluster' : function(dx, exhaust_scale, exhaust_cluster_index) {
         numSpheres = 4;
 
         this.node_exhausts = [];
@@ -549,6 +578,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 translation(dx, 0, 0),
                 scale(exhaust_scale, exhaust_scale, exhaust_scale)
             )
+        );
+        this.node_exhaustCluster.updateFunctions.push(
+            this.generateClusterMovementFunction(exhaust_cluster_index)
         );
 
         for (var i = 0; i < 4; i++) {
