@@ -356,7 +356,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         for (let amp of rawFreqData) {
             sumAmplitude += amp;
         }
-        console.log(sumAmplitude);
+        // console.log(sumAmplitude);
 
         // var barFreqData = getBarFrequencyData();
         // var numBins = barFreqData.length();
