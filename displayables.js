@@ -111,9 +111,9 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 ////                )
 
 var GravityTime = 0;
-var BallYPos = 0;
-var CEILING = 10;
-var FLOOR = 0;
+var BallYPos = 8;
+var CEILING = 8;
+var FLOOR = -4;
 var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
 var NUM_EXHAUST_CLUSTERS = 20;
 var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
@@ -199,7 +199,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.sceneGraphBaseNode.addChild(this.test_backgroundFrame);
         this.test_background = new SceneGraphNode(
              shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/sky8.jpg")
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/star10.gif")
         );
         this.test_backgroundFrame .updateFunctions.push(
             this.generateRotateFunction(this.planet_RPM, [0, 1, 0])
@@ -210,7 +210,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_objectsFrame = new SceneGraphNode(
             null,
             null,
-            translation(-11, 0, 0)
+            translation(-11, BallYPos, 0)
         );
         this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
@@ -380,7 +380,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        graphics_state.lights.push(new Light(vec4(0, 0, 0, 1), Color(1, 1, 1, 1), 100000));
         
         
-        
         // Get delta time for animation
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
@@ -449,6 +448,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 
             // ball hits lower bound
             else if (BallYPos + dy <= FLOOR) {
+                // TODO: Game end
                 dy = FLOOR - BallYPos;
                 BallYPos = FLOOR;
             }
