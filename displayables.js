@@ -170,9 +170,13 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_planetFrame.addChild(this.node_planet);
         
         
+        this.node_objectsFrame = new SceneGraphNode(
+            null,
+            null
+        );
+        this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
-        
-        this.node_testing = new SceneGraphNode(
+        this.node_spaceship = new SceneGraphNode(
             shapes_in_use.testing_shape,
             new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "earthmap1-test.jpg"),
             mat4(),
@@ -180,11 +184,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             mat4(),
             "Default"
         );
-        this.node_testing.updateFunctions.push(
+        this.node_spaceship.updateFunctions.push(
            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
        );
-        this.sceneGraphBaseNode.addChild(this.node_testing);
-        
+        this.node_objectsFrame.addChild(this.node_spaceship);
+
 //        // Central Rotation
 //        this.cylinder_RPM = -10;
 //        
@@ -241,6 +245,25 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 //        
 //        this.sceneGraphBaseNode.addChild(this.node_ball);
         
+        
+        this.generateNode_exhaustCluster(-2, 0.22);
+        this.generateNode_exhaustCluster(-4, 0.20);
+        this.generateNode_exhaustCluster(-6, 0.18);
+        this.generateNode_exhaustCluster(-8, 0.16);
+        this.generateNode_exhaustCluster(-10, 0.14);
+        this.generateNode_exhaustCluster(-12, 0.12);
+        this.generateNode_exhaustCluster(-14, 0.10);
+        this.generateNode_exhaustCluster(-16, 0.08);
+        this.generateNode_exhaustCluster(-18, 0.06);    
+
+
+
+
+
+
+
+
+
         // END: Nodes
         
         // END: Scene Graph
@@ -488,6 +511,52 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
 
         return temp;
+    },
+
+    'generateNode_exhaustCluster' : function(dx, exhaust_scale) {
+        numSpheres = 4;
+
+        this.node_exhausts = [];
+
+        this.node_exhausts[0] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           translation(0, 1, 0)
+        );
+        
+        this.node_exhausts[1] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           translation(0, -1, 0)
+        );
+
+        this.node_exhausts[2] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           translation(-1, 0, 0)
+        );
+
+        this.node_exhausts[3] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
+           translation(1, 0, 0)
+        );
+
+        this.node_exhaustCluster = new SceneGraphNode(
+            null,
+            null,
+            in_localMatrix = mult(
+                translation(dx, 0, 0),
+                scale(exhaust_scale, exhaust_scale, exhaust_scale)
+            )
+        );
+
+        for (var i = 0; i < 4; i++) {
+            this.node_exhaustCluster.addChild(this.node_exhausts[i]);
+        }
+        this.node_objectsFrame.addChild(this.node_exhaustCluster);
+
+
     }
     
     
