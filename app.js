@@ -93,6 +93,7 @@ function setupCanvas() {
          graphicsState = mainCanvas.shared_scratchpad.graphics_state;
     
     shaders_in_use["Default"] = new Phong_or_Gouraud_Shader(graphicsState);
+    shaders_in_use["Bump Map"] = new Fake_Bump_Mapping(graphicsState);
     
     var textureNames = [];
 //    textureNames.push("res/candy-cane-wallpaper-25.png");

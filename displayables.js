@@ -131,10 +131,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         // TODO:
         //      Create shapes needed for drawing here
-//        shapes_in_use.cylinder = new Cylindrical_Tube(50, 50);
-//        shapes_in_use.cube = new Cube();
         shapes_in_use.sphere = new Subdivision_Sphere(5);
-        
+        shapes_in_use["testing_shape"] = new Shape_From_File("res/CHALLENGER71.obj");
         
         // Scene Graph
         
@@ -170,6 +168,19 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             this.generateRotateFunction(this.planet_RPM, [0, 0, 1])
         );
         this.node_planetFrame.addChild(this.node_planet);
+        
+        
+        
+        
+        this.node_testing = new SceneGraphNode(
+            shapes_in_use.testing_shape,
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "earthmap1-test.jpg"),
+            mat4(),
+            false,
+            mat4(),
+            "Default"
+        );
+        this.sceneGraphBaseNode.addChild(this.node_testing);
         
 //        // Central Rotation
 //        this.cylinder_RPM = -10;
@@ -356,7 +367,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         for (let amp of rawFreqData) {
             sumAmplitude += amp;
         }
-        console.log(sumAmplitude);
+//        console.log(sumAmplitude);
 
         // var barFreqData = getBarFrequencyData();
         // var numBins = barFreqData.length();
@@ -492,3 +503,15 @@ function hasGetUserMedia() {
             navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
 
+
+
+
+//  Corrections / additions:
+
+Shape.prototype.normalize_positions = function()
+  { var average_position = vec3(), average_length = 0;
+    for( var i = 0; i < this.positions.length; i++ ) average_position  =  add( average_position, scale_vec( 1/this.positions.length, this.positions[i] ) );
+    for( var i = 0; i < this.positions.length; i++ ) this.positions[i] =  subtract( this.positions[i], average_position );
+    for( var i = 0; i < this.positions.length; i++ ) average_length    += 1/this.positions.length * length( this.positions[i] );
+    for( var i = 0; i < this.positions.length; i++ ) this.positions[i] =  scale_vec( 1/average_length, this.positions[i] );
+  }
