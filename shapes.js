@@ -57,9 +57,9 @@ Declare_Any_Class( "Body",
 //        b.location_matrix = mult( b.location_matrix, delta );                    // Apply angular velocity - post-multiply to keep rotations together    
 //      },
 //    'check_if_colliding'( b, a_inv, shape )   // Collision detection function
-    'check_if_colliding'( b, shape )   // Collision detection function
+    'check_if_colliding'( b, a_inv, shape )   // Collision detection function
       { if ( this == b ) return false;        // Nothing collides with itself
-       var a_inv = inverse(b.location_matrix, scale(b.scale));
+//       var a_inv = inverse(b.location_matrix, scale(b.scale));
        
         var T = mult( a_inv, mult( b.location_matrix, scale( b.scale ) ) );  // Convert sphere b to a coordinate frame where a is a unit sphere
         for( let p of shape.positions )                                      // For each vertex in that b,

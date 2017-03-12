@@ -107,6 +107,9 @@ function setupCanvas() {
     
     var textureNames = [];
 //    textureNames.push("res/candy-cane-wallpaper-25.png");
+    textureNames.push("res/earthmap1-test.jpg");
+    textureNames.push("res/smoke.jpg");
+    textureNames.push("res/smoke.png");
   //  textureNames.push("res/earthmap1-test.jpg");
      textureNames.push("res/planet.jpg");
     textureNames.push("res/asteroid/ast4.jpg");

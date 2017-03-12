@@ -38,15 +38,19 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
 
 
 // Scene Graph node stuff
-var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatrix = mat4(), in_useGouraud = false, in_texTransform = mat4(), in_shaderName = "Default") {
+var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatrix = mat4(), in_useGouraud = false, in_texTransform = mat4(), in_shaderName = "Default", in_useBody = true) {
     // Store local matrix used in local world. Needs to be updated externally as appropriate
     this.localMatrix = in_localMatrix;
     
     // Store the current world matrix for the next children to use
     this.currWorldMatrix = in_localMatrix;
     
-    // Stores shape to be draw
-    this.shape = in_shape;
+    // Body
+    if (in_shape) {
+        this.body = new Body(in_shape);
+        if (in_useBody)
+            bodies.push(this.body);
+    }
     
     // Stores material to be used when drawing this shape
     this.material = in_material;
@@ -91,6 +95,23 @@ var GravityTime = 0;
 var BallYPos = 0;
 var CEILING = 10;
 var FLOOR = 0;
+var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
+var NUM_EXHAUST_CLUSTERS = 20;
+var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
+var ExhaustHistory = [];
+var curExhaustIndex = 0;
+
+// TODO
+var totalDistance = 8;
+var distanceIncrement = totalDistance/NUM_EXHAUST_CLUSTERS;
+var maxScale = 0.50;
+var minScale = 0.08;
+var scaleDecrement = (maxScale - minScale) / NUM_EXHAUST_CLUSTERS;
+var exhaust_material = new Material(Color(0.3, 0.3, 0.3, 1.0), .6, .2, 0, 20, "res/smoke.jpg");
+// var exhaust_material = new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100);
+
+var bodies = [];
+
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
     'construct': function( context )
@@ -102,10 +123,14 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.shared_scratchpad    = context.shared_scratchpad;
         //
         
+        
+        this.collider = new Subdivision_Sphere(3);
+        
         this.deltaTime = 0;
         this.lastDrawTime = 0;
-        
-        
+        for (var i = 0; i < EXHAUST_HISTORY_ARRAY_SIZE; ++i) {
+           ExhaustHistory[i] = 0;
+        }
         // TODO:
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
@@ -128,10 +153,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             null,
             null,
             in_localMatrix = mult(
-//                mult(
-//                    translation(0, -(1.1)*this.planet_scale, 0),
-//                    rotation(90, [0, 0, 1])
-//                ),
                 translation(0, -(1.1)*this.planet_scale, 0),
                 scale(this.planet_scale, this.planet_scale, this.planet_scale)
             )
@@ -147,26 +168,38 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         this.node_planetFrame.addChild(this.node_planet);
         
-       this.test_scale = 20;
+        this.test_scale = 20;
         this.test_backgroundFrame = new SceneGraphNode(
             null,
             null,
             in_localMatrix = scale(this.test_scale, this.test_scale, this.test_scale)
         );
         
-        
         this.sceneGraphBaseNode.addChild(this.test_backgroundFrame);
         this.test_background = new SceneGraphNode(
              shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/sky8.jpg")
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/sky8.jpg"),
+            mat4(),
+            false,
+            mat4(),
+            "Default",
+            false
         );
         this.test_backgroundFrame .updateFunctions.push(
             this.generateRotateFunction(this.planet_RPM, [0, 1, 0])
         );
         this.test_backgroundFrame.addChild(this.test_background);
+
+
+        this.node_objectsFrame = new SceneGraphNode(
+            null,
+            null,
+            translation(-11, 0, 0)
+        );
+        this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
         
-        this.node_testing = new SceneGraphNode(
+        this.node_spaceship = new SceneGraphNode(
             shapes_in_use.testing_shape,
             new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/asteroid/ast4.jpg"),
             scale(0.8, 0.8, 0.8),
@@ -174,10 +207,32 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             mat4(),
             "Bump Map"
         );
-        this.node_testing.updateFunctions.push(
+        this.node_spaceship.updateFunctions.push(
            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
        );
-        this.sceneGraphBaseNode.addChild(this.node_testing);
+        this.node_objectsFrame.addChild(this.node_spaceship);
+        
+        
+        for (var i = 0; i < NUM_EXHAUST_CLUSTERS; i++) {
+            this.generateNode_exhaustCluster(
+                0 - (i + 1) *distanceIncrement,
+                minScale + i * scaleDecrement, 
+                i);
+        }
+        
+        
+        
+        this.node_testingstuff = new SceneGraphNode(
+            shapes_in_use.testing_shape,
+            exhaust_material,
+            translation(-11, 3, 0),
+            false,
+            mat4(),
+            "Default",
+            true
+        );
+        this.sceneGraphBaseNode.addChild(this.node_testingstuff);
+        
         
         // END: Nodes
         
@@ -196,14 +251,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
        controls.add("space", this, function() {
             GravityTime = 0;
        });
-//        
-//        controls.add("t", this, function() {
-//            this.textureRotateOn = !this.textureRotateOn;
-//        });
-//        
-//        controls.add("s", this, function() {
-//            this.textureScrollOn = !this.textureScrollOn;
-//        });
     },
     
     'update_strings': function( user_interface_string_manager )       // Strings that this displayable object (Animation) contributes to the UI:
@@ -222,7 +269,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             }
             rootNode.currWorldMatrix = modelTransform;
             
-            if (rootNode.shape) {
+            if (rootNode.body) {
                 
                 shaders_in_use[rootNode.shaderName].activate();
                 
@@ -231,7 +278,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     tempTexTransform = rootNode.textureTransform;
                 }
                 this.shared_scratchpad.graphics_state.gouraud = rootNode.useGouraud;
-                rootNode.shape.draw(this.shared_scratchpad.graphics_state, modelTransform, rootNode.material, tempTexTransform);
+                rootNode.body.shape.draw(this.shared_scratchpad.graphics_state, modelTransform, rootNode.material, tempTexTransform);
+                
+                rootNode.body.location_matrix = modelTransform;
             }
             
             var children = rootNode.children;
@@ -265,49 +314,53 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
         
-        
-        // Create next wall node if necessary
-        
-//        this.timeSinceLastPathItemCreation += this.deltaTime;
-//        if (this.timeSinceLastPathItemCreation >= this.wallSpawnInterval) {
-//            
-//            var tempPlacement = new SceneGraphNode(
-//                null, null,
-//                in_localMatrix = translation(this.cylinder_scaleX, 0, 0)
-//            );
-//            tempPlacement.updateFunctions.push(
-//                this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
-//            );
-//            this.sceneGraphBaseNode.addChild(tempPlacement);
-//            
-//            
-//            var temp = this.generateNode_wall(
-//                new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
-//                this.wall_scaleVec,
-//                1,
-//                -11 + (this.wall_scaleVec[1])
-//            );
-//            tempPlacement.addChild(temp);
-//            
-//            this.timeSinceLastPathItemCreation = 0;
-//        }
-//        
-//        
-//        // Remove Walls that have risen above the top
-//        for (var i = 0; i < this.nodes_pathItems; ++i) {
-//            // TODO: Figure out how to remove walls if they cross the upper boundary
-//            // TODO:        Possibly use collision detection with invisible boundary/polygon at the top (maybe a giant square or circle)
-//        }
+        curExhaustIndex = (curExhaustIndex + 1) % EXHAUST_HISTORY_ARRAY_SIZE;
         
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
-//        shapes_in_use.testingCurve.draw(graphics_state, mult(rotation(80, [1, 0, 0]), scale(0.1, 0.1, 0.1)), new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100));
         
         
         var rawFreqData = getRawFrequencyData();
         var sumAmplitude = 0;
         for (let amp of rawFreqData) {
             sumAmplitude += amp;
-        }
+        };
+        
+        
+        for( let b of bodies )
+          { var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
+
+            var center = mult_vec( b.location_matrix, vec4( 0, 0, 0, 1 ) ).slice(0,3);        // Center of the body
+//            b.linear_velocity = subtract( b.linear_velocity, scale_vec( .0003, center ) );    // Apply a small centripetal force to everything
+//            b.material = new Material( Color( 1,1,1,1 ), .1,1, 1, 40 );                      // Default color: white
+
+            for( let c of bodies ) {
+                // Collision process starts here
+              if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
+              { 
+                  console.log("hit detected");
+//                  alert("its time for stanley to scream");
+                // b.material = new Material( Color( 1,0,0,1 ), .1, 1, 1, 40 ); // If we get here, we collided, so turn red
+                // b.linear_velocity  = vec3();                                 // Zero out the velocity so they don't inter-penetrate more
+                // b.angular_velocity = 0;
+                //this.bodies.pop(c);
+                // if(b != this.masterShape && c == this.masterShape){
+                //   this.bodies.pop(b);
+                // }
+                // else if(c != this.masterShape && b == this.masterShape) {
+                //     this.bodies.pop(c);
+                //     //this.slaveShapes.pop(b)
+                // }
+                // else {
+                //    b.material = new Material( Color( 1,0,0,1 ), .1, 1, 1, 40 );
+                //    b.linear_velocity  = vec3(); 
+                //    b.angular_velocity = 0;
+                } 
+                //b.linear_velocity  = vec3(); 
+                //b.angular_velocity = 0;
+                //this.bodies.pop(b);
+              }   
+          }
+        
         
     },
     
@@ -346,6 +399,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 ),
                 node.localMatrix
             );
+            // console.log(dy);
+            // console.log(curExhaustIndex);
+            ExhaustHistory[curExhaustIndex] = dy;
+            // console.log(ExhaustHistory);
         };
     },
     'generateRotateFunction' : function(RPM, rotationAxis) {
@@ -377,6 +434,27 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         };
     },
     
+    'generateClusterMovementFunction' : function(exhaust_cluster_index) {
+        return function(node, deltaTime) {
+            var index = curExhaustIndex -  DELAY_FACTOR * exhaust_cluster_index;
+            if (index < 0) {
+                index += EXHAUST_HISTORY_ARRAY_SIZE;
+            }
+            var dy = ExhaustHistory[index];
+            // var rand = (Math.random() * 0.1) - 0.05;
+            // dy += rand;
+            node.localMatrix = mult(
+                translation(
+                    0,
+                    dy,
+                    0
+                ),
+                node.localMatrix
+            );
+        };
+    },
+
+
     'generateNode' : function(in_shape, in_material, in_scaleVec, in_rotateAngle, in_rotateVec, in_translationVec) {
         return new SceneGraphNode(
                 in_shape,
@@ -426,6 +504,75 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
 
         return temp;
+    },
+
+    'generateNode_exhaustCluster' : function(dx, exhaust_scale, exhaust_cluster_index) {
+        numSpheres = 4;
+
+        this.node_exhausts = [];
+
+        this.node_exhausts[0] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           exhaust_material,
+           translation(0, 1, 0),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+        
+        this.node_exhausts[1] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           exhaust_material,
+           translation(0, -1, 0),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+
+        this.node_exhausts[2] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           exhaust_material,
+           translation(-1, 0, 0),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+
+        this.node_exhausts[3] = new SceneGraphNode(
+           shapes_in_use.sphere,
+           exhaust_material,
+           translation(1, 0, 0),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+
+        this.node_exhaustCluster = new SceneGraphNode(
+            null,
+            null,
+            in_localMatrix = mult(
+                translation(dx, 0, 0),
+                scale(exhaust_scale, exhaust_scale, exhaust_scale)
+            ),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+        this.node_exhaustCluster.updateFunctions.push(
+            this.generateClusterMovementFunction(exhaust_cluster_index)
+        );
+
+        for (var i = 0; i < 4; i++) {
+            this.node_exhaustCluster.addChild(this.node_exhausts[i]);
+        }
+        this.node_objectsFrame.addChild(this.node_exhaustCluster);
+
+
     }
     
     
