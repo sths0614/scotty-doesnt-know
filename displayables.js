@@ -92,9 +92,9 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 };
 
 var GravityTime = 0;
-var BallYPos = 0;
-var CEILING = 10;
-var FLOOR = 0;
+var BallYPos = 8;
+var CEILING = 8;
+var FLOOR = -4;
 var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
 var NUM_EXHAUST_CLUSTERS = 20;
 var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
@@ -134,8 +134,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // TODO:
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
-        shapes_in_use["testing_shape"] = new Shape_From_File("res/asteroid/asteroid.obj");
-//        shapes_in_use["testing_shape"] = new Shape_From_File("res/CHALLENGER71.obj");
+        shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
+//        shapes_in_use["shape_asteroid"] = new Shape_From_File("res/CHALLENGER71.obj");
         
         // Scene Graph
         
@@ -168,39 +168,39 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         this.node_planetFrame.addChild(this.node_planet);
         
-        this.test_scale = 20;
-        this.test_backgroundFrame = new SceneGraphNode(
+        this.background_frame_scale = 20;
+        this.node_backgroundFrame = new SceneGraphNode(
             null,
             null,
-            in_localMatrix = scale(this.test_scale, this.test_scale, this.test_scale)
+            in_localMatrix = scale(this.background_frame_scale, this.background_frame_scale, this.background_frame_scale)
         );
         
-        this.sceneGraphBaseNode.addChild(this.test_backgroundFrame);
-        this.test_background = new SceneGraphNode(
+        this.sceneGraphBaseNode.addChild(this.node_backgroundFrame);
+        this.node_background = new SceneGraphNode(
              shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/sky8.jpg"),
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/star10.gif"),
             mat4(),
             false,
             mat4(),
             "Default",
             false
         );
-        this.test_backgroundFrame .updateFunctions.push(
+        this.node_backgroundFrame .updateFunctions.push(
             this.generateRotateFunction(this.planet_RPM, [0, 1, 0])
         );
-        this.test_backgroundFrame.addChild(this.test_background);
+        this.node_backgroundFrame.addChild(this.node_background);
 
 
         this.node_objectsFrame = new SceneGraphNode(
             null,
             null,
-            translation(-11, 0, 0)
+            translation(-11, BallYPos, 0)
         );
         this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
         
         this.node_spaceship = new SceneGraphNode(
-            shapes_in_use.testing_shape,
+            shapes_in_use.shape_asteroid,
             new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/asteroid/ast4.jpg"),
             scale(0.8, 0.8, 0.8),
             false,
@@ -223,7 +223,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         
         this.node_testingstuff = new SceneGraphNode(
-            shapes_in_use.testing_shape,
+            shapes_in_use.shape_asteroid,
             exhaust_material,
             translation(-11, 3, 0),
             false,
@@ -239,8 +239,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // END: Scene Graph
         
         if (hasGetUserMedia()) {
-          // Good to go!
-//          alert('yup!');
         } else {
           alert('getUserMedia() is not supported in your browser');
         }
@@ -307,7 +305,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         // Extra light source below sun just to light up sun's geometry so it doesn't look so bland and like a circle
 //        graphics_state.lights.push(new Light(vec4(0, 0, 0, 1), Color(1, 1, 1, 1), 100000));
-        
         
         
         // Get delta time for animation
@@ -382,6 +379,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 
             // ball hits lower bound
             else if (BallYPos + dy <= FLOOR) {
+                // TODO: Game end
                 dy = FLOOR - BallYPos;
                 BallYPos = FLOOR;
             }
