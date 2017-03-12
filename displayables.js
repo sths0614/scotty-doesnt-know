@@ -87,29 +87,6 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     }
 };
 
-////                mult(
-////                    scale(
-////                        in_scaleVec[0],
-////                        in_scaleVec[1],
-////                        in_scaleVec[2]
-////                    ),
-////                    mult(
-////                        rotation(
-////                            in_rotateAngle,
-////                            [
-////                                in_rotateVec[0],
-////                                in_rotateVec[1],
-////                                in_rotateVec[2]   
-////                            ]
-////                        ),
-////                        translation(
-////                            in_translationVec[0],
-////                            in_translationVec[1],
-////                            in_translationVec[2]
-////                        )
-////                    )
-////                )
-
 var GravityTime = 0;
 var BallYPos = 0;
 var CEILING = 10;
@@ -201,62 +178,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
        );
         this.sceneGraphBaseNode.addChild(this.node_testing);
-        
-//        // Central Rotation
-//        this.cylinder_RPM = -10;
-//        
-//        // Central Cylinder
-//        this.cylinder_scaleX = 4;
-//        this.cylinder_scaleY = 18;
-//        this.cylinder_scaleZ = 4;
-//        this.node_cylinder = new SceneGraphNode(
-//            shapes_in_use.cylinder,
-//            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100, "candy-cane-wallpaper-25.png"),
-//            in_localMatrix = mult(
-//                scale(
-//                    this.cylinder_scaleX,
-//                    this.cylinder_scaleY,
-//                    this.cylinder_scaleZ
-//                ),
-//                rotation(90, [1, 0, 0])
-//            )
-//        );
-//        this.node_cylinder.updateFunctions.push(
-//            this.generateRotateFunction(this.cylinder_RPM, [0, 1, 0])
-//        );
-//        this.sceneGraphBaseNode.addChild(this.node_cylinder);
-//        
-//        
-//        // Path Items Translation
-//        
-//        this.wallSpawnInterval = 5;                     // In seconds
-//        
-//        this.timeSinceLastPathItemCreation = 0;         // In seconds
-//        
-//        this.wallStartRotAngle = 0;
-//        
-//        
-//        // Wall
-//        this.nodes_pathRotations = [];
-//        this.nodes_pathItems = [];
-//        
-//        this.wall_scaleX = 1;
-//        this.wall_scaleY = 1.4;
-//        this.wall_scaleZ = 0.1;
-//        this.wall_scaleVec = [this.wall_scaleX, this.wall_scaleY, this.wall_scaleZ];
-//        
-//        
-//        // Ball
-//        this.node_ball = new SceneGraphNode(
-//            shapes_in_use.sphere,
-//            new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100),
-//            translation(0, -5, this.cylinder_scaleZ)
-//        );
-//        this.node_ball.updateFunctions.push(
-//            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
-//        );
-//        
-//        this.sceneGraphBaseNode.addChild(this.node_ball);
         
         // END: Nodes
         
