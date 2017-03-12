@@ -180,6 +180,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             mat4(),
             "Default"
         );
+        this.node_testing.updateFunctions.push(
+           this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
+       );
         this.sceneGraphBaseNode.addChild(this.node_testing);
         
 //        // Central Rotation
