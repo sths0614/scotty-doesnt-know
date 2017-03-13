@@ -146,6 +146,13 @@ var LASER_LIFETIME = 5.5;
 var tempContext;
 
 
+var STATE_BEGIN = 1;
+var STATE_PLAYING = 2;
+var STATE_END = 3;
+
+var currGameState = STATE_BEGIN;
+
+
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
     'construct': function( context )
@@ -178,6 +185,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         shapes_in_use["shape_textScore"] = new Text_Line(35);
 
         shapes_in_use["cube"] = new Cube();
+        
+        shapes_in_use["square"] = new Square();
+        
         
         // Scene Graph
         
@@ -306,10 +316,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             "Default",
             false
         );
-        this.node_textScore.updateFunctions.push(
-            function(node, deltaTime) {
-                //shapes_in_use.shape_text.set_string("Space Invaders");
-        });
+//        shapes_in_use.shape_textScore.set_string("" + 0 + "");
+//        this.node_textScore.updateFunctions.push(
+//            function(node, deltaTime) {
+//                //shapes_in_use.shape_text.set_string("Space Invaders");
+//        });
          this.sceneGraphBaseNode.addChild(this.node_textScore);
         
         // Asteroid stuff
@@ -322,6 +333,19 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             false
         );
         this.sceneGraphBaseNode.addChild(this.node_asteroidFrame);
+        
+        
+        this.screenScale = 8;
+        this.node_beginningScreen = new SceneGraphNode(
+            shapes_in_use.square,
+            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/StartTexture.png"),
+            scale(this.screenScale,this.screenScale,this.screenScale),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+        this.screenBound = false;
         
         //
         
@@ -361,6 +385,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             
             if (rootNode.body) {
                 
+                console.log(rootNode.shaderName);
                 shaders_in_use[rootNode.shaderName].activate();
                 
                 var tempTexTransform = mat4();
@@ -415,101 +440,113 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
 
+        console.log(currGameState);
         
+        if (currGameState == STATE_PLAYING) {
         
-//        console.log("length of bodies: " + bodies.length);
-        var toKill = [];
-        for( var i = 0; i < bodies.length; ++i) 
-        // for( let b of bodies )
-        { 
-            var bnode = bodies[i];
-            var b = bodies[i].body;
-            var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
+    //        console.log("length of bodies: " + bodies.length);
+            var toKill = [];
+            for( var i = 0; i < bodies.length; ++i) 
+            // for( let b of bodies )
+            { 
+                var bnode = bodies[i];
+                var b = bodies[i].body;
+                var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
 
-            var center = mult_vec( b.location_matrix, vec4( 0, 0, 0, 1 ) ).slice(0,3);        // Center of the body
-//            b.linear_velocity = subtract( b.linear_velocity, scale_vec( .0003, center ) );    // Apply a small centripetal force to everything
-//            b.material = new Material( Color( 1,1,1,1 ), .1,1, 1, 40 );                      // Default color: white
+                var center = mult_vec( b.location_matrix, vec4( 0, 0, 0, 1 ) ).slice(0,3);        // Center of the body
+    //            b.linear_velocity = subtract( b.linear_velocity, scale_vec( .0003, center ) );    // Apply a small centripetal force to everything
+    //            b.material = new Material( Color( 1,1,1,1 ), .1,1, 1, 40 );                      // Default color: white
 
-            for( var j = i; j < bodies.length; ++j)
-            // for( let c of bodies ) {
-            {
+                for( var j = i; j < bodies.length; ++j)
+                // for( let c of bodies ) {
+                {
 
-                var cnode = bodies[j];
-                var c = bodies[j].body;
-                // Collision process starts here
-                // var tempCollider = (b.bodyID == "spaceship" || c.bodyID == "spaceship") ? shapes_in_use.shape_ship : this.collider;
-              if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
-              { 
-                  console.log("hit detected");
-                  console.log("bodies: " + b.bodyID + " and " + c.bodyID);
-                var bID = b.bodyID;
-                var cID = c.bodyID;
+                    var cnode = bodies[j];
+                    var c = bodies[j].body;
+                    // Collision process starts here
+                    // var tempCollider = (b.bodyID == "spaceship" || c.bodyID == "spaceship") ? shapes_in_use.shape_ship : this.collider;
+                  if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
+                  { 
+                      console.log("hit detected");
+                      console.log("bodies: " + b.bodyID + " and " + c.bodyID);
+                    var bID = b.bodyID;
+                    var cID = c.bodyID;
 
-                if ((bID == "spaceship" && cID == "asteroid") || 
-                    (bID == "asteroid" && cID == "spaceship")) {
-                    // Trigger End Game State
-                    alert("you died haha");
-                    this.endGame();
-                } else if ((bID == "laser" && cID == "asteroid") || 
-                    (bID == "asteroid" && cID == "laser")) {
-                    laserExists = false;
-                    toKill.push(bnode);
-                    toKill.push(cnode);
-                } else if ((bID == cID) && (bID == "asteroid")) {
-                    // Momentum
+                    if ((bID == "spaceship" && cID == "asteroid") || 
+                        (bID == "asteroid" && cID == "spaceship")) {
+                        // Trigger End Game State
+                        alert("you died haha");
+                        this.endGame();
+                    } else if ((bID == "laser" && cID == "asteroid") || 
+                        (bID == "asteroid" && cID == "laser")) {
+                        laserExists = false;
+                        toKill.push(bnode);
+                        toKill.push(cnode);
+                    } else if ((bID == cID) && (bID == "asteroid")) {
+                        // Momentum
 
+                    }
+                  }
                 }
-              }
             }
-        }
 
-        for ( let a of toKill) {
-            if (a && a.parent) {
-                a.parent.removeChild(a);
+            for ( let a of toKill) {
+                if (a && a.parent) {
+                    a.parent.removeChild(a);
+                }
             }
+
+            var barFreqData = getBarFrequencyData();
+            var sumAmplitude = 0;
+            for (let amp of barFreqData) {
+                sumAmplitude += amp;
+            };
+
+
+            if (!laserExists && sumAmplitude > AMPLITUDE_THRESHOLD) {
+                this.generateNode_laser(0.3, 0.1, 0.1);
+            }
+
+            // Spawn Asteroids
+            this.timeSinceLastAsteroidSpawn += this.deltaTime;
+    //        console.log(this.timeSinceLastAsteroidSpawn);
+    //        console.log(ASTEROID_SPAWN_INTERVAL);
+            if (this.timeSinceLastAsteroidSpawn > ASTEROID_SPAWN_INTERVAL) {
+    //            console.log("stuff");
+                this.generateNode_asteroid();
+                this.timeSinceLastAsteroidSpawn = 0;
+            }
+            
+            score = score + 1/60;
+            
+            if (this.screenBound) {
+                console.log("UNbinding");
+                this.sceneGraphBaseNode.removeChild(this.node_beginningScreen);
+                this.screenBound = false;
+            }
+//            console.log(this.screenBound);
+            
+            
+            
+        } else if (currGameState == STATE_BEGIN) {
+            if(!this.screenBound) {
+                console.log("binding");
+                this.sceneGraphBaseNode.addChild(this.node_beginningScreen);
+                this.screenBound = true;
+            }
+            score = 0;
         }
         
-        var barFreqData = getBarFrequencyData();
-        var sumAmplitude = 0;
-        for (let amp of barFreqData) {
-            sumAmplitude += amp;
-        };
-
-
-        if (!laserExists && sumAmplitude > AMPLITUDE_THRESHOLD) {
-            this.generateNode_laser(0.3, 0.1, 0.1);
-        }
-
-
-           
+        this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
+        
         // Spawn Smoke
         this.timeSinceLastSmokeSpawn += this.deltaTime;
         if (this.timeSinceLastSmokeSpawn > SMOKE_PARTICLE_SPAWN_INTERVAL) {
             this.generateNode_smokeParticle();
             this.timeSinceLastSmokeSpawn = 0;
         }
-        
-        // Spawn Asteroids
-        this.timeSinceLastAsteroidSpawn += this.deltaTime;
-//        console.log(this.timeSinceLastAsteroidSpawn);
-//        console.log(ASTEROID_SPAWN_INTERVAL);
-        if (this.timeSinceLastAsteroidSpawn > ASTEROID_SPAWN_INTERVAL) {
-//            console.log("stuff");
-            this.generateNode_asteroid();
-            this.timeSinceLastAsteroidSpawn = 0;
-        }
-        
 
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
-        score = score + 1/60;
-        this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
-//        console.log(this.node_asteroidFrame.children.length);
-
-        // for (let a of bodies) {
-        //     if (a.body.shape) {
-        //         this.collider.draw(this.shared_scratchpad.graphics_state, mult( a.currWorldMatrix, a.localMatrix), new Material(Color(1, 1, 1, 1), 0.7, 0.8, 0, 20));
-        //     }
-        // }
 
     },
     

@@ -118,6 +118,7 @@ function setupCanvas() {
     textureNames.push("res/fire_PNG6025.png");
     textureNames.push("res/space-ship/original-texture.jpg");
     textureNames.push("res/space-ship/laser.jpg");
+    textureNames.push("res/StartTexture.png");
     
     for (var i = 0; i < textureNames.length; ++i) {
         textures_in_use[textureNames[i]] = new Texture(textureNames[i], true);
