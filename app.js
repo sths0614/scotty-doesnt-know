@@ -68,9 +68,21 @@ function setupAudio() {
 //        video.onloadedmetadata = function(e) {
 //          // Ready to go. Do some stuff.
 //        };
-        
+        var background_music = new Audio("res/vitas.mp3");
+        background_music.volume = 0.3;
+        background_music.loop = true;
+        background_music.play();
+
+        var exhaust_music = new Audio("res/fire.mp3");
+        exhaust_music.volume = 1.0;
+        exhaust_music.loop = true;
+        exhaust_music.play();
         
     }, errorCallback);
+
+
+
+
     // console.log(audioContext);
     // console.log(audioSource);
     // console.log(audioAnalyzer);

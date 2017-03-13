@@ -131,7 +131,7 @@ var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fir
 var bodies = [];
 
 //var AMPLITUDE_THRESHOLD = 100  ;
-var AMPLITUDE_THRESHOLD = 10000  ;
+var AMPLITUDE_THRESHOLD = 1000  ;
 var laserExists = false;
 var LASER_SPEED = 5;
 // var laserTime = 0;
@@ -528,6 +528,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                         this.endGame();
                     } else if ((bID == "laser" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "laser")) {
+
+                        var explosion_sound = new Audio("res/explosion.mp3");
+                        explosion_sound.volume = 1.0;
+                        explosion_sound.loop = false;
+                        explosion_sound.play();
                         laserExists = false;
                         toKill.push(bnode);
                         toKill.push(cnode);
@@ -553,6 +558,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 
 
             if (!laserExists && sumAmplitude > AMPLITUDE_THRESHOLD) {
+                var laser_sound = new Audio("res/laser.mp3");
+                laser_sound.volume = 0.3;
+                laser_sound.loop = false;
+                laser_sound.play();
                 this.generateNode_laser(0.3, 0.1, 0.1);
             }
 
