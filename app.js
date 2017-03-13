@@ -115,6 +115,7 @@ function setupCanvas() {
     textureNames.push("res/asteroid/ast4.jpg");
     textureNames.push("res/star10.gif");
     textureNames.push("text.png");
+    textureNames.push("res/fire_PNG6025.png");
     
     for (var i = 0; i < textureNames.length; ++i) {
         textures_in_use[textureNames[i]] = new Texture(textureNames[i], true);

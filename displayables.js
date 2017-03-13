@@ -102,13 +102,21 @@ var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
 var ExhaustHistory = [];
 var curExhaustIndex = 0;
 
+var SMOKE_PARTICLE_SPEED = -3;
+var SMOKE_PARTICLE_INTERVAL = 0.01;
+var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
+var SMOKE_PARTICLE_LIMIT = SPACESHIP_X_POS - 100;
+var SMOKE_PARTICLE_MAX_SCALE = 0.3;
+var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.1;
+
 // TODO
 var totalDistance = 8;
 var distanceIncrement = totalDistance/NUM_EXHAUST_CLUSTERS;
 var maxScale = 0.50;
 var minScale = 0.08;
 var scaleDecrement = (maxScale - minScale) / NUM_EXHAUST_CLUSTERS;
-var exhaust_material = new Material(Color(0.8, 0.8, 0.8, 1.0), .6, .2, 0, 20);
+var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fire_PNG6025.png");
+//var exhaust_material = new Material(Color(0.8, 0.8, 0.8, 1.0), .6, .2, 0, 20);
 // var exhaust_material = new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100);
 
 var bodies = [];
@@ -133,9 +141,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.deltaTime = 0;
         this.lastDrawTime = 0;
-        for (var i = 0; i < EXHAUST_HISTORY_ARRAY_SIZE; ++i) {
-           ExhaustHistory[i] = 0;
-        }
+        
+        this.timeSinceLastSmokeSpawn = 0;
+        
         // TODO:
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
@@ -224,28 +232,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_objectsFrame.addChild(this.node_spaceship);
         
         
-        for (var i = 0; i < NUM_EXHAUST_CLUSTERS; i++) {
-            this.generateNode_exhaustCluster(
-                0 - (i + 1) *distanceIncrement,
-                minScale + i * scaleDecrement, 
-                i);
-        }
-        
-        
-        
-//        this.node_testingstuff = new SceneGraphNode(
-//            shapes_in_use.shape_asteroid,
-//            exhaust_material,
-//            translation(-11, 3, 0),
-//            false,
-//            mat4(),
-//            "Default",
-//            true
-//        );
-//        this.sceneGraphBaseNode.addChild(this.node_testingstuff);
-        
-        
-//        shapes_in_use.shape_text.set_string("hello");
         this.node_text = new SceneGraphNode(
             shapes_in_use["shape_text"],
             Color(0, 0, 0, 1),
@@ -260,38 +246,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 shapes_in_use.shape_text.set_string("hello");
         });
         this.sceneGraphBaseNode.addChild(this.node_text);
-        
-        
-        
-        
-//        this.node_smoke_particle = new SceneGraphNode(
-//            shapes_in_use["cube"],
-//            exhaust_material,
-//            mult(
-//                rotation(80, [1, 1, 1]),
-//                scale(0.3, 0.3, 0.3)
-//            ),
-//            false,
-//            mat4(),
-//            "Default",
-//            false
-//        );
-//        this.node_smoke_particle.currXLoc = 0;
-//        this.node_smoke_particle.updateFunctions.push(
-//            this.generateTranslateFunction([-0.1, 0, 0])
-//        );
-//        this.node_smoke_particle.updateFunctions.push(
-//            function(node, deltaTime) {
-//                node.currXLoc -= 0.1;
-//                console.log(node.currXLoc);
-//                if (node.currXLoc < -15) {
-//                    node.parent.removeChild(node);
-//                }
-//            }
-//        );
-        
-        this.node_smoke_particle = this.generateNode_smokeParticle(0);
-        this.node_objectsFrame.addChild(this.node_smoke_particle);
         
         
         // END: Nodes
@@ -375,8 +329,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
         
-        curExhaustIndex = (curExhaustIndex + 1) % EXHAUST_HISTORY_ARRAY_SIZE;
-        
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
         
         
@@ -409,30 +361,17 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
               if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
               { 
                   console.log("hit detected");
-//                  alert("its time for stanley to scream");
-                // b.material = new Material( Color( 1,0,0,1 ), .1, 1, 1, 40 ); // If we get here, we collided, so turn red
-                // b.linear_velocity  = vec3();                                 // Zero out the velocity so they don't inter-penetrate more
-                // b.angular_velocity = 0;
-                //this.bodies.pop(c);
-                // if(b != this.masterShape && c == this.masterShape){
-                //   this.bodies.pop(b);
-                // }
-                // else if(c != this.masterShape && b == this.masterShape) {
-                //     this.bodies.pop(c);
-                //     //this.slaveShapes.pop(b)
-                // }
-                // else {
-                //    b.material = new Material( Color( 1,0,0,1 ), .1, 1, 1, 40 );
-                //    b.linear_velocity  = vec3(); 
-                //    b.angular_velocity = 0;
-                } 
-                //b.linear_velocity  = vec3(); 
-                //b.angular_velocity = 0;
-                //this.bodies.pop(b);
-              }   
+              }
+            }
           }
         
-        
+           
+        // Spawn Smoke
+        this.timeSinceLastSmokeSpawn += this.deltaTime;
+        if (this.timeSinceLastSmokeSpawn > SMOKE_PARTICLE_INTERVAL) {
+            this.generateNode_smokeParticle();
+            this.timeSinceLastSmokeSpawn = 0;
+        }
     },
     
     'generateGravityFunction' : function(u, g) {
@@ -471,10 +410,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 ),
                 node.localMatrix
             );
-            // console.log(dy);
-            // console.log(curExhaustIndex);
-            ExhaustHistory[curExhaustIndex] = dy;
-            // console.log(ExhaustHistory);
         };
     },
     'generateRotateFunction' : function(RPM, rotationAxis) {
@@ -556,107 +491,17 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     )
             );
     },
-    
-    
-    'generateNode_wall' : function(in_material, in_wallScaleVec, in_raiseRate = 0, in_startY = 0, in_startRotAngle = 0) {
-        var radius = (3/2)*in_wallScaleVec[0];
-        var radians = in_startRotAngle * (Math.PI/180);
-        var temp = this.generateNode(
-            shapes_in_use.cube,
-            in_material,
-            in_wallScaleVec,
-            in_startRotAngle, [0, 1, 0],
-            [radius * Math.cos(radians), in_startY, radius * Math.sin(radians)]
-    //        [(3/2)*in_wallScaleVec[0], in_startY, 0]
-        );
-        temp.updateFunctions.push(
-            this.generateTranslateFunction(
-                [0, in_raiseRate * in_wallScaleVec[1], 0]
-            )
-        );
-
-        return temp;
-    },
-
-    'generateNode_exhaustCluster' : function(dx, exhaust_scale, exhaust_cluster_index) {
-        numSpheres = 4;
-
-        this.node_exhausts = [];
-
-        this.node_exhausts[0] = new SceneGraphNode(
-           shapes_in_use.sphere,
-           exhaust_material,
-           translation(0, 1, 0),
-            false,
-            mat4(),
-            "Default",
-            false
-        );
-        
-        this.node_exhausts[1] = new SceneGraphNode(
-           shapes_in_use.sphere,
-           exhaust_material,
-           translation(0, -1, 0),
-            false,
-            mat4(),
-            "Default",
-            false
-        );
-
-        this.node_exhausts[2] = new SceneGraphNode(
-           shapes_in_use.sphere,
-           exhaust_material,
-           translation(-1, 0, 0),
-            false,
-            mat4(),
-            "Default",
-            false
-        );
-
-        this.node_exhausts[3] = new SceneGraphNode(
-           shapes_in_use.sphere,
-           exhaust_material,
-           translation(1, 0, 0),
-            false,
-            mat4(),
-            "Default",
-            false
-        );
-
-        this.node_exhaustCluster = new SceneGraphNode(
-            null,
-            null,
-            in_localMatrix = mult(
-                translation(dx, 0, 0),
-                scale(exhaust_scale, exhaust_scale, exhaust_scale)
-            ),
-            false,
-            mat4(),
-            "Default",
-            false
-        );
-        this.node_exhaustCluster.updateFunctions.push(
-            this.generateClusterMovementFunction(exhaust_cluster_index)
-        );
-
-        for (var i = 0; i < 4; i++) {
-            this.node_exhaustCluster.addChild(this.node_exhausts[i]);
-        }
-        this.node_objectsFrame.addChild(this.node_exhaustCluster);
-
-
-    },
-    
-    'generateNode_smokeParticle' : function(spaceShipY) {
+    'generateNode_smokeParticle' : function() {
+        var randScale = Math.random() * SMOKE_PARTICLE_MAX_SCALE;
         var nodeParticle = new SceneGraphNode(
             shapes_in_use["cube"],
             exhaust_material,
             mult(
                 mult(
-                    translation(0, spaceShipY, 0),
+                    translation(SPACESHIP_X_POS, spaceshipYPos, 0),
                     rotation(Math.random() * 360, [Math.random(), Math.random(), Math.random()])
                 ),
-                scale(Math.random()*2, Math.random()*2, Math.random()*2)
+                scale(randScale, randScale, randScale)
             ),
             false,
             mat4(),
@@ -664,18 +509,23 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             false
         );
         nodeParticle.currXLoc = 0;
+        nodeParticle.totalTime = 0;
         nodeParticle.updateFunctions.push(
-            this.generateTranslateFunction([-0.1, 0, 0])
+            this.generateTranslateFunction([SMOKE_PARTICLE_SPEED, 0, 0])
         );
         nodeParticle.updateFunctions.push(
             function(node, deltaTime) {
-                node.currXLoc -= 0.1;
-                console.log(node.currXLoc);
-                if (node.currXLoc < -15) {
+                node.currXLoc += SMOKE_PARTICLE_SPEED;
+                node.totalTime += deltaTime;
+//                if (node.currXLoc < SMOKE_PARTICLE_LIMIT) {
+//                    node.parent.removeChild(node);
+//                }
+                if (node.totalTime > SMOKE_PARTICLE_TIME_LIMIT) {
                     node.parent.removeChild(node);
                 }
             }
         );
+        this.sceneGraphBaseNode.addChild(nodeParticle);
         return nodeParticle;
     },
 
