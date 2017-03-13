@@ -363,7 +363,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'init_keys': function( controls )   // init_keys():  Define any extra keyboard shortcuts here
     {
        controls.add("space", this, function() {
-            GravityTime = 0;
+           if (currGameState == STATE_BEGIN) {
+               currGameState = STATE_PLAYING;
+           } else if (currGameState == STATE_PLAYING) {
+               GravityTime = 0;
+           }
        });
     },
     
