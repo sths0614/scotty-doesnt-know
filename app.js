@@ -43,8 +43,8 @@ function setupAudio() {
         filter = audioContext.createBiquadFilter();
 
         // audioSource -> filter -> destination
-        audioSource.connect(filter);
-        filter.connect(audioContext.destination);
+//        audioSource.connect(filter);
+//        filter.connect(audioContext.destination);
 
         // connect to the analyzer
         audioAnalyzer = audioContext.createAnalyser();

@@ -136,7 +136,8 @@ var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fir
 
 var bodies = [];
 
-var AMPLITUDE_THRESHOLD = 100  ;
+//var AMPLITUDE_THRESHOLD = 100  ;
+var AMPLITUDE_THRESHOLD = 1000  ;
 var laserExists = false;
 var LASER_SPEED = 5;
 // var laserTime = 0;
