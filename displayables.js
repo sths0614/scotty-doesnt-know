@@ -38,7 +38,7 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
 
 
 // Scene Graph node stuff
-var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatrix = mat4(), in_useGouraud = false, in_texTransform = mat4(), in_shaderName = "Default", in_useBody = true) {
+var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatrix = mat4(), in_useGouraud = false, in_texTransform = mat4(), in_shaderName = "Default", in_useBody = false) {
     // Store local matrix used in local world. Needs to be updated externally as appropriate
     this.localMatrix = in_localMatrix;
     
@@ -83,6 +83,11 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     
     // helper function for removing children
     this.removeChild = function(childNode) {
+        var bodyIndex = bodies.indexOf(childNode.body);
+        if (bodyIndex > -1) {
+            bodies.splice(bodyIndex, 1);
+        }
+        
         var index = this.children.indexOf(childNode);
         if (index > -1) {
             childNode.parent = null;
@@ -103,11 +108,21 @@ var ExhaustHistory = [];
 var curExhaustIndex = 0;
 
 var SMOKE_PARTICLE_SPEED = -3;
-var SMOKE_PARTICLE_INTERVAL = 0.01;
+var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.01;
 var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
 var SMOKE_PARTICLE_LIMIT = SPACESHIP_X_POS - 100;
 var SMOKE_PARTICLE_MAX_SCALE = 0.3;
-var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.1;
+
+
+var ASTEROID_MAX_SPEED = 5;
+var ASTEROID_MIN_SPEED = 1;
+var ASTEROID_SPAWN_INTERVAL = 2;
+//var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
+var ASTEROID_LIMIT = -40;//SPACESHIP_X_POS - 100;
+var ASTEROID_MAX_SCALE = 1;
+var ASTEROID_MIN_SCALE = 0.3;
+var ASTEROID_MAX_YDISPLACEMENT = 5;
+
 
 // TODO
 var totalDistance = 8;
@@ -143,6 +158,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.lastDrawTime = 0;
         
         this.timeSinceLastSmokeSpawn = 0;
+        this.timeSinceLastAsteroidSpawn = 0;
         
         // TODO:
         //      Create shapes needed for drawing here
@@ -169,7 +185,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             in_localMatrix = mult(
                 translation(0, -(1.1)*this.planet_scale, 0),
                 scale(this.planet_scale, this.planet_scale, this.planet_scale)
-            )
+            ),
+            false,
+            mat4(),
+            "Default",
+            false
         );
         this.sceneGraphBaseNode.addChild(this.node_planetFrame);
         
@@ -191,7 +211,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_backgroundFrame = new SceneGraphNode(
             null,
             null,
-            in_localMatrix = scale(this.background_frame_scale, this.background_frame_scale, this.background_frame_scale)
+            in_localMatrix = scale(this.background_frame_scale, this.background_frame_scale, this.background_frame_scale),
+            false,
+            mat4(),
+            "Default",
+            false
         );
         
         this.sceneGraphBaseNode.addChild(this.node_backgroundFrame);
@@ -213,7 +237,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_objectsFrame = new SceneGraphNode(
             null,
             null,
-            translation(SPACESHIP_X_POS, spaceshipYPos, 0)
+            translation(SPACESHIP_X_POS, spaceshipYPos, 0),
+            false,
+            mat4(),
+            "Default",
+            false
         );
         this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
@@ -224,8 +252,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             scale(0.8, 0.8, 0.8),
             false,
             mat4(),
-            "Bump Map"
+            "Bump Map",
+            true
         );
+        this.node_spaceship.body.bodyID = "spaceship";
         this.node_spaceship.updateFunctions.push(
            this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
        );
@@ -246,6 +276,21 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 shapes_in_use.shape_text.set_string("hello");
         });
         this.sceneGraphBaseNode.addChild(this.node_text);
+        
+        
+        
+        // Asteroid stuff
+        this.node_asteroidFrame = new SceneGraphNode(
+            null,
+            null,
+            translation(20, 3, 0),
+            false,
+            "Default",
+            false
+        );
+        this.sceneGraphBaseNode.addChild(this.node_asteroidFrame);
+        
+        //
         
         
         // END: Nodes
@@ -349,6 +394,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 
 
         
+//        console.log("length of bodies: " + bodies.length);
         for( let b of bodies )
           { var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
 
@@ -361,6 +407,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
               if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
               { 
                   console.log("hit detected");
+                  console.log("bodies: " + b.bodyID + " and " + c.bodyID);
               }
             }
           }
@@ -368,10 +415,22 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
            
         // Spawn Smoke
         this.timeSinceLastSmokeSpawn += this.deltaTime;
-        if (this.timeSinceLastSmokeSpawn > SMOKE_PARTICLE_INTERVAL) {
+        if (this.timeSinceLastSmokeSpawn > SMOKE_PARTICLE_SPAWN_INTERVAL) {
             this.generateNode_smokeParticle();
             this.timeSinceLastSmokeSpawn = 0;
         }
+        
+        // Spawn Asteroids
+        this.timeSinceLastAsteroidSpawn += this.deltaTime;
+//        console.log(this.timeSinceLastAsteroidSpawn);
+//        console.log(ASTEROID_SPAWN_INTERVAL);
+        if (this.timeSinceLastAsteroidSpawn > ASTEROID_SPAWN_INTERVAL) {
+//            console.log("stuff");
+            this.generateNode_asteroid();
+            this.timeSinceLastAsteroidSpawn = 0;
+        }
+        
+//        console.log(this.node_asteroidFrame.children.length);
     },
     
     'generateGravityFunction' : function(u, g) {
@@ -491,6 +550,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     )
             );
     },
+    
     'generateNode_smokeParticle' : function() {
         var randScale = Math.random() * SMOKE_PARTICLE_MAX_SCALE;
         var nodeParticle = new SceneGraphNode(
@@ -515,7 +575,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         nodeParticle.updateFunctions.push(
             function(node, deltaTime) {
-                node.currXLoc += SMOKE_PARTICLE_SPEED;
+//                node.currXLoc += SMOKE_PARTICLE_SPEED;
+                node.currXLoc += (deltaTime * SMOKE_PARTICLE_SPEED);
                 node.totalTime += deltaTime;
 //                if (node.currXLoc < SMOKE_PARTICLE_LIMIT) {
 //                    node.parent.removeChild(node);
@@ -527,6 +588,49 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         this.sceneGraphBaseNode.addChild(nodeParticle);
         return nodeParticle;
+    },
+    
+    'generateNode_asteroid' : function() {
+        console.log("creating asteroid");
+        var randScale = (Math.random() * (ASTEROID_MAX_SCALE - ASTEROID_MIN_SCALE) + ASTEROID_MIN_SCALE);
+        
+        var nodeAsteroid = new SceneGraphNode(
+            shapes_in_use["shape_asteroid"],
+            new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/asteroid/ast4.jpg"),
+            mult(
+                mult(
+                    translation(0, (Math.random()*ASTEROID_MAX_YDISPLACEMENT) - (ASTEROID_MAX_YDISPLACEMENT/2), 0),
+                    rotation(Math.random() * 360, [Math.random(), Math.random(), Math.random()])
+                ),
+                scale(randScale, randScale, randScale)
+            ),
+            false,
+            mat4(),
+            "Default",
+            true
+        );
+        nodeAsteroid.body.bodyID = "asteroid";
+        nodeAsteroid.currXLoc = 0;
+        nodeAsteroid.totalTime = 0;
+        var speed = -(Math.random() * (ASTEROID_MAX_SPEED - ASTEROID_MIN_SPEED) + ASTEROID_MIN_SPEED);
+        nodeAsteroid.updateFunctions.push(
+            this.generateTranslateFunction([speed, 0, 0])
+        );
+        nodeAsteroid.updateFunctions.push(
+            function(node, deltaTime) {
+                node.currXLoc += (deltaTime * speed);
+                node.totalTime += deltaTime;
+                if (node.currXLoc < ASTEROID_LIMIT) {
+                    node.parent.removeChild(node);
+                }
+//                if (node.totalTime > SMOKE_PARTICLE_TIME_LIMIT) {
+//                    node.parent.removeChild(node);
+//                }
+            }
+        );
+        this.node_asteroidFrame.addChild(nodeAsteroid);
+        return nodeAsteroid;
+        
     },
 
 

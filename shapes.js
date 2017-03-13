@@ -61,6 +61,8 @@ Declare_Any_Class( "Body",
       { if ( this == b ) return false;        // Nothing collides with itself
 //       var a_inv = inverse(b.location_matrix, scale(b.scale));
        
+       if (this.bodyID == b.bodyID) return false;
+       
         var T = mult( a_inv, mult( b.location_matrix, scale( b.scale ) ) );  // Convert sphere b to a coordinate frame where a is a unit sphere
         for( let p of shape.positions )                                      // For each vertex in that b,
         { var Tp = mult_vec( T, p.concat(1) ).slice(0,3);                    // Apply a_inv*b coordinate frame shift
