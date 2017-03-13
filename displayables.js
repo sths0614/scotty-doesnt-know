@@ -20,7 +20,10 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
 //                this.graphics_state.camera_transform
 //            );
 //        });
-//        
+//
+        controls.add("f", this, function() {
+            document.getElementById("gl-canvas").webkitRequestFullscreen();
+        });
 //        controls.add("o", this, function() {
 //            this.graphics_state.camera_transform = mult(
 //                translation(scale_vec(1, [0, 0, -1])),
@@ -385,7 +388,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             
             if (rootNode.body) {
                 
-                console.log(rootNode.shaderName);
+                // console.log(rootNode.shaderName);
                 shaders_in_use[rootNode.shaderName].activate();
                 
                 var tempTexTransform = mat4();
@@ -440,7 +443,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
 
-        console.log(currGameState);
+        // console.log(currGameState);
         
         if (currGameState == STATE_PLAYING) {
         
@@ -467,8 +470,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     // var tempCollider = (b.bodyID == "spaceship" || c.bodyID == "spaceship") ? shapes_in_use.shape_ship : this.collider;
                   if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
                   { 
-                      console.log("hit detected");
-                      console.log("bodies: " + b.bodyID + " and " + c.bodyID);
+                      // console.log("hit detected");
+                      // console.log("bodies: " + b.bodyID + " and " + c.bodyID);
                     var bID = b.bodyID;
                     var cID = c.bodyID;
 
@@ -520,7 +523,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             score = score + 1/60;
             
             if (this.screenBound) {
-                console.log("UNbinding");
+                // console.log("UNbinding");
                 this.sceneGraphBaseNode.removeChild(this.node_beginningScreen);
                 this.screenBound = false;
             }
@@ -530,7 +533,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             
         } else if (currGameState == STATE_BEGIN) {
             if(!this.screenBound) {
-                console.log("binding");
+                // console.log("binding");
                 this.sceneGraphBaseNode.addChild(this.node_beginningScreen);
                 this.screenBound = true;
             }
@@ -708,7 +711,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     },
     
     'generateNode_asteroid' : function() {
-        console.log("creating asteroid");
+        // console.log("creating asteroid");
         var randScale = (Math.random() * (ASTEROID_MAX_SCALE - ASTEROID_MIN_SCALE) + ASTEROID_MIN_SCALE);
         
         var nodeAsteroid = new SceneGraphNode(

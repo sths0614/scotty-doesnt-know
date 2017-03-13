@@ -21,8 +21,12 @@ window.onload = function init() {
 }
 
 window.onresize = function() {
-    glCanvas.width = window.innerWidth;
-    glCanvas.height = window.innerHeight;
+    // glCanvas.width = window.innerWidth;
+    // glCanvas.height = window.innerHeight;
+    // gl.canvas.width = gl.canvas.clientWidth;
+    // gl.canvas.height = gl.canvas.clientHeight;
+    // console.log("resize");
+    // console.log(gl.canvas.width);
 }
 
 function setupAudio() {
@@ -102,6 +106,8 @@ function setupCanvas() {
     mainCanvas = new Canvas_Manager("gl-canvas", Color(0, 0, 0, 1)),
          graphicsState = mainCanvas.shared_scratchpad.graphics_state;
     
+
+
     shaders_in_use["Default"] = new Phong_or_Gouraud_Shader(graphicsState);
     shaders_in_use["Bump Map"] = new Fake_Bump_Mapping(graphicsState);
     
