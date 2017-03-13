@@ -111,7 +111,7 @@ var SMOKE_PARTICLE_SPEED = -3;
 var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.01;
 var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
 var SMOKE_PARTICLE_LIMIT = SPACESHIP_X_POS - 100;
-var SMOKE_PARTICLE_MAX_SCALE = 0.3;
+var SMOKE_PARTICLE_MAX_SCALE = 0.2;
 
 
 var ASTEROID_MAX_SPEED = 5;
@@ -167,7 +167,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
-        shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/ship5.obj");
+        //shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/jellyfish.obj");
+        shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/jellyfish.obj");
+        // shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/ship5.obj");
         shapes_in_use["shape_text"] = new Text_Line(35);
         shapes_in_use["shape_textScore"] = new Text_Line(35);
 
@@ -253,9 +255,17 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         
         this.node_spaceship = new SceneGraphNode(
+            // shapes_in_use.sphere,
             shapes_in_use.shape_ship,
             new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/space-ship/original-texture.jpg"),
-            mult(rotation(110, [0.1, 1, 0.2]), scale(0.8, 0.8, 0.6)),
+            // mat4(),
+            mult(
+                mult(
+                    rotation(90, [0, 1, 0]), scale(0.8, 0.8, 0.8)    
+                    ),
+                rotation(110, [0, 0, 0.7])
+                ),
+           // mult(rotation(110, [0.1, 1, 0.2]), scale(0.8, 0.8, 0.6)),
             false,
             mat4(),
             "Bump Map",
@@ -415,6 +425,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 var cnode = bodies[j];
                 var c = bodies[j].body;
                 // Collision process starts here
+                // var tempCollider = (b.bodyID == "spaceship" || c.bodyID == "spaceship") ? shapes_in_use.shape_ship : this.collider;
               if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
               { 
                   console.log("hit detected");
@@ -480,6 +491,13 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         score = score + 1/60;
         this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
 //        console.log(this.node_asteroidFrame.children.length);
+
+        // for (let a of bodies) {
+        //     if (a.body.shape) {
+        //         this.collider.draw(this.shared_scratchpad.graphics_state, mult( a.currWorldMatrix, a.localMatrix), new Material(Color(1, 1, 1, 1), 0.7, 0.8, 0, 20));
+        //     }
+        // }
+
     },
     
     'generateGravityFunction' : function(u, g) {
@@ -607,7 +625,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             exhaust_material,
             mult(
                 mult(
-                    translation(SPACESHIP_X_POS-1.8, spaceshipYPos, 0),
+                    translation(SPACESHIP_X_POS-2.5, spaceshipYPos, 0),
                     rotation(Math.random() * 360, [Math.random(), Math.random(), Math.random()])
                 ),
                 scale(randScale, randScale, randScale)
