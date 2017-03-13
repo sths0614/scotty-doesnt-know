@@ -135,9 +135,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
-//        shapes_in_use["shape_asteroid"] = new Shape_From_File("res/CHALLENGER71.obj");
-        
         shapes_in_use["shape_text"] = new Text_Line(35);
+        shapes_in_use["cube"] = new Cube();
         
         // Scene Graph
         
@@ -229,16 +228,16 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         
         
-        this.node_testingstuff = new SceneGraphNode(
-            shapes_in_use.shape_asteroid,
-            exhaust_material,
-            translation(-11, 3, 0),
-            false,
-            mat4(),
-            "Default",
-            true
-        );
-        this.sceneGraphBaseNode.addChild(this.node_testingstuff);
+//        this.node_testingstuff = new SceneGraphNode(
+//            shapes_in_use.shape_asteroid,
+//            exhaust_material,
+//            translation(-11, 3, 0),
+//            false,
+//            mat4(),
+//            "Default",
+//            true
+//        );
+//        this.sceneGraphBaseNode.addChild(this.node_testingstuff);
         
         
 //        shapes_in_use.shape_text.set_string("hello");
@@ -256,6 +255,38 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 shapes_in_use.shape_text.set_string("hello");
         });
         this.sceneGraphBaseNode.addChild(this.node_text);
+        
+        
+        
+        
+//        this.node_smoke_particle = new SceneGraphNode(
+//            shapes_in_use["cube"],
+//            exhaust_material,
+//            mult(
+//                rotation(80, [1, 1, 1]),
+//                scale(0.3, 0.3, 0.3)
+//            ),
+//            false,
+//            mat4(),
+//            "Default",
+//            false
+//        );
+//        this.node_smoke_particle.currXLoc = 0;
+//        this.node_smoke_particle.updateFunctions.push(
+//            this.generateTranslateFunction([-0.1, 0, 0])
+//        );
+//        this.node_smoke_particle.updateFunctions.push(
+//            function(node, deltaTime) {
+//                node.currXLoc -= 0.1;
+//                console.log(node.currXLoc);
+//                if (node.currXLoc < -15) {
+//                    node.parent.removeChild(node);
+//                }
+//            }
+//        );
+        
+        this.node_smoke_particle = this.generateNode_smokeParticle(0);
+        this.node_objectsFrame.addChild(this.node_smoke_particle);
         
         
         // END: Nodes
@@ -599,6 +630,39 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_objectsFrame.addChild(this.node_exhaustCluster);
 
 
+    },
+    
+    
+    'generateNode_smokeParticle' : function(spaceShipY) {
+        var nodeParticle = new SceneGraphNode(
+            shapes_in_use["cube"],
+            exhaust_material,
+            mult(
+                mult(
+                    translation(0, spaceShipY, 0),
+                    rotation(Math.random() * 360, [Math.random(), Math.random(), Math.random()])
+                ),
+                scale(Math.random()*2, Math.random()*2, Math.random()*2)
+            ),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+        nodeParticle.currXLoc = 0;
+        nodeParticle.updateFunctions.push(
+            this.generateTranslateFunction([-0.1, 0, 0])
+        );
+        nodeParticle.updateFunctions.push(
+            function(node, deltaTime) {
+                node.currXLoc -= 0.1;
+                console.log(node.currXLoc);
+                if (node.currXLoc < -15) {
+                    node.parent.removeChild(node);
+                }
+            }
+        );
+        return nodeParticle;
     }
     
     
