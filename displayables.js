@@ -131,7 +131,7 @@ var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fir
 var bodies = [];
 
 //var AMPLITUDE_THRESHOLD = 100  ;
-var AMPLITUDE_THRESHOLD = 1000  ;
+var AMPLITUDE_THRESHOLD = 10000  ;
 var laserExists = false;
 var LASER_SPEED = 5;
 // var laserTime = 0;
@@ -441,7 +441,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     },
 
     'endGame' : function() {
-        
+        var crash_sound = new Audio("res/crash.mp3");
+        crash_sound.volume = 1.0;
+        crash_sound.loop = false;
+        crash_sound.play();
         if (currGameState == STATE_END) return;
         
 //        score = 0;
