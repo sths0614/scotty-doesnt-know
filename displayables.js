@@ -158,7 +158,7 @@ function getRandomEndingTexture() {
     var texturePrefix = "res/endingScreens/dead";
     var textureSuffix = ".png";
     var numTextures = 7;
-    var textureNumber = Math.floor(Math.random() * (numTextures - 1)) + 1;
+    var textureNumber = Math.floor(Math.random() * numTextures) + 1;
     
     return new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, texturePrefix + textureNumber.toString() + textureSuffix);
 }
@@ -524,7 +524,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     if ((bID == "spaceship" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "spaceship")) {
                         // Trigger End Game State
-                        alert("you died haha");
+//                        alert("you died haha");
                         this.endGame();
                     } else if ((bID == "laser" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "laser")) {
@@ -617,7 +617,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // s(t) = ut + 1/2gt^2
         // v(t) = u + gt
         
-//        var endGameFunc = this.endGame;
+        var endGameFunc = this.endGame;
         
         return function(node, deltaTime) {
             if (currGameState == STATE_PLAYING) {
@@ -639,7 +639,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     dy = FLOOR - spaceshipYPos;
                     spaceshipYPos = FLOOR;
                     
-//                    endGameFunc();
+                    endGameFunc();
                 }
 
                 // ball changes by dy 
