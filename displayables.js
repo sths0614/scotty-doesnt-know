@@ -49,7 +49,7 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     if (in_shape) {
         this.body = new Body(in_shape);
         if (in_useBody)
-            bodies.push(this.body);
+            bodies.push(this);
     }
     
     // Stores material to be used when drawing this shape
@@ -83,7 +83,7 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     
     // helper function for removing children
     this.removeChild = function(childNode) {
-        var bodyIndex = bodies.indexOf(childNode.body);
+        var bodyIndex = bodies.indexOf(childNode);
         if (bodyIndex > -1) {
             bodies.splice(bodyIndex, 1);
         }
@@ -136,7 +136,7 @@ var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fir
 
 var bodies = [];
 
-var AMPLITUDE_THRESHOLD = 5000  ;
+var AMPLITUDE_THRESHOLD = 100  ;
 var laserExists = false;
 var LASER_SPEED = 5;
 // var laserTime = 0;
@@ -396,22 +396,54 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         
 //        console.log("length of bodies: " + bodies.length);
-        for( let b of bodies )
-          { var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
+        var toKill = [];
+        for( var i = 0; i < bodies.length; ++i) 
+        // for( let b of bodies )
+        { 
+            var bnode = bodies[i];
+            var b = bodies[i].body;
+            var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
 
             var center = mult_vec( b.location_matrix, vec4( 0, 0, 0, 1 ) ).slice(0,3);        // Center of the body
 //            b.linear_velocity = subtract( b.linear_velocity, scale_vec( .0003, center ) );    // Apply a small centripetal force to everything
 //            b.material = new Material( Color( 1,1,1,1 ), .1,1, 1, 40 );                      // Default color: white
 
-            for( let c of bodies ) {
+            for( var j = i; j < bodies.length; ++j)
+            // for( let c of bodies ) {
+            {
+
+                var cnode = bodies[j];
+                var c = bodies[j].body;
                 // Collision process starts here
               if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
               { 
                   console.log("hit detected");
                   console.log("bodies: " + b.bodyID + " and " + c.bodyID);
+                var bID = b.bodyID;
+                var cID = c.bodyID;
+
+                if ((bID == "spaceship" && cID == "asteroid") || 
+                    (bID == "asteroid" && cID == "spaceship")) {
+                    // Trigger End Game State
+                    alert("you died haha");
+                } else if ((bID == "laser" && cID == "asteroid") || 
+                    (bID == "asteroid" && cID == "laser")) {
+                    laserExists = false;
+                    toKill.push(bnode);
+                    toKill.push(cnode);
+                } else if ((bID == cID) && (bID == "asteroid")) {
+                    // Momentum
+
+                }
               }
             }
-          }
+        }
+
+        for ( let a of toKill) {
+            if (a && a.parent) {
+                a.parent.removeChild(a);
+            }
+        }
         
         var barFreqData = getBarFrequencyData();
         var sumAmplitude = 0;
@@ -661,8 +693,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             false,
             mat4(),
             "Default",
-            false
+            true
         );
+        this.node_laser.body.bodyID = "laser";
         laserExists = true;
         this.node_laser.time = 0;
         this.node_laser.updateFunctions.push(
