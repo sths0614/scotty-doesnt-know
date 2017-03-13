@@ -653,7 +653,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'generateNode_laser' : function(laserXScale, laserYScale, laserZScale) {
         this.node_laser = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(1.0, 1.0, 0.0, 1.0), .4, .6, .6, 20),
+            new Material(Color(0.0, 0.0, 0.0, 0.2), .9, .8, 0.2, 60, "res/space-ship/laser.jpg"),
             in_localMatrix = mult(
                 translation(SPACESHIP_X_POS + 1, spaceshipYPos, 0),
                 scale(laserXScale, laserYScale, laserZScale)
