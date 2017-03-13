@@ -102,7 +102,7 @@ var score=0;
 var GravityTime = 0;
 var SPACESHIP_X_POS = -11;
 var CEILING = 8;
-var FLOOR = -3;
+var FLOOR = -4;
 var spaceshipYPos = (CEILING + FLOOR) / 2;
 //var spaceshipYPos = 8;
 
@@ -115,7 +115,7 @@ var SMOKE_PARTICLE_MAX_SCALE = 0.2;
 
 var ASTEROID_MAX_SPEED = 8;
 var ASTEROID_MIN_SPEED = 1;
-var ASTEROID_SPAWN_INTERVAL = 2;
+var ASTEROID_SPAWN_INTERVAL = 1;
 //var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
 var ASTEROID_LIMIT = -40;//SPACESHIP_X_POS - 100;
 var ASTEROID_MAX_SCALE = 1;
@@ -208,7 +208,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.sceneGraphNodes = [];
         
         this.planet_scale = 30;
-        this.planet_RPM = 3;
+        this.planet_RPM = 1.2;
         this.node_planetFrame = new SceneGraphNode(
             null,
             null,
