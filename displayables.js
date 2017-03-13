@@ -100,7 +100,7 @@ var GravityTime = 0;
 var SPACESHIP_X_POS = -11;
 var spaceshipYPos = 8;
 var CEILING = 8;
-var FLOOR = -4;
+var FLOOR = -3;
 var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
 var NUM_EXHAUST_CLUSTERS = 20;
 var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
@@ -136,8 +136,11 @@ var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fir
 
 var bodies = [];
 
-var AMPLITUDE_THRESHOLD = 10000;
+var AMPLITUDE_THRESHOLD = 5000  ;
 var laserExists = false;
+var LASER_SPEED = 5;
+// var laserTime = 0;
+var LASER_LIFETIME = 5.5;
 
 
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
@@ -275,7 +278,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             function(node, deltaTime) {
                 shapes_in_use.shape_text.set_string("hello");
         });
-        this.sceneGraphBaseNode.addChild(this.node_text);
+        // this.sceneGraphBaseNode.addChild(this.node_text);
         
         
         
@@ -373,26 +376,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // Get delta time for animation
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
-        
-        this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
-        
-        
-        var barFreqData = getBarFrequencyData();
-        var sumAmplitude = 0;
-        for (let amp of barFreqData) {
-            sumAmplitude += amp;
-        };
 
-        if (sumAmplitude > AMPLITUDE_THRESHOLD) {
-            console.log("SHOOT");
-            if (!laserExists) {
-                this.generateNode_laser();
-                laserExists = true;
-            }
-        }
         
-
-
         
 //        console.log("length of bodies: " + bodies.length);
         for( let b of bodies )
@@ -412,6 +397,18 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             }
           }
         
+        var barFreqData = getBarFrequencyData();
+        var sumAmplitude = 0;
+        for (let amp of barFreqData) {
+            sumAmplitude += amp;
+        };
+
+
+        if (!laserExists && sumAmplitude > AMPLITUDE_THRESHOLD) {
+            this.generateNode_laser(0.3, 0.1, 0.1);
+        }
+
+
            
         // Spawn Smoke
         this.timeSinceLastSmokeSpawn += this.deltaTime;
@@ -430,6 +427,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             this.timeSinceLastAsteroidSpawn = 0;
         }
         
+
+        this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
+
 //        console.log(this.node_asteroidFrame.children.length);
     },
     
@@ -633,10 +633,36 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
     },
 
+    'generateNode_laser' : function(laserXScale, laserYScale, laserZScale) {
+        this.node_laser = new SceneGraphNode(
+            shapes_in_use.sphere,
+            new Material(Color(1.0, 1.0, 0.0, 1.0), .4, .6, .6, 20),
+            in_localMatrix = mult(
+                translation(SPACESHIP_X_POS + 1, spaceshipYPos, 0),
+                scale(laserXScale, laserYScale, laserZScale)
+            ),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+        laserExists = true;
+        this.node_laser.time = 0;
+        this.node_laser.updateFunctions.push(
+            this.generateTranslateFunction([LASER_SPEED, 0, 0])
+        );
+        this.node_laser.updateFunctions.push(
+            function(node, deltaTime) {
+                node.time += deltaTime;
+                if (node.time > LASER_LIFETIME) {
+                    laserExists = false;
+                    node.parent.removeChild(node);
+                }
+            }
+        );
 
-    'generateNode_laser' : function() {
+        this.sceneGraphBaseNode.addChild(this.node_laser);
     }
-    
     
 }, Animation );
 
