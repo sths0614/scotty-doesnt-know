@@ -103,12 +103,6 @@ var FLOOR = -3;
 var spaceshipYPos = (CEILING + FLOOR) / 2;
 //var spaceshipYPos = 8;
 
-var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
-var NUM_EXHAUST_CLUSTERS = 20;
-var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
-var ExhaustHistory = [];
-var curExhaustIndex = 0;
-
 var SMOKE_PARTICLE_SPEED = -3;
 var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.01;
 var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
@@ -127,11 +121,6 @@ var ASTEROID_MAX_YDISPLACEMENT = 10;
 
 
 // TODO
-var totalDistance = 8;
-var distanceIncrement = totalDistance/NUM_EXHAUST_CLUSTERS;
-var maxScale = 0.50;
-var minScale = 0.08;
-var scaleDecrement = (maxScale - minScale) / NUM_EXHAUST_CLUSTERS;
 var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fire_PNG6025.png");
 //var exhaust_material = new Material(Color(0.8, 0.8, 0.8, 1.0), .6, .2, 0, 20);
 // var exhaust_material = new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100);
@@ -184,6 +173,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.timeSinceLastSmokeSpawn = 0;
         this.timeSinceLastAsteroidSpawn = 0;
+        
+        spaceshipYPos = (CEILING + FLOOR) / 2;
+        score = 0;
+        bodies = [];
+        laserExists = false;
         
         // TODO:
         //      Create shapes needed for drawing here
@@ -391,6 +385,12 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                currGameState = STATE_PLAYING;
            } else if (currGameState == STATE_PLAYING) {
                GravityTime = 0;
+           } else if (currGameState == STATE_END) {
+               GravityTime = 0;
+               score = 0;
+               spaceshipYPos = (CEILING + FLOOR) / 2;
+               this.construct(tempContext);
+               currGameState = STATE_BEGIN;
            }
        });
     },
@@ -401,8 +401,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'drawSceneGraph' : function (deltaTime, rootNode) {
         if (rootNode) {
             
-            for (var i = 0; i < rootNode.updateFunctions.length; ++i) {
-                rootNode.updateFunctions[i](rootNode, deltaTime);
+            if (currGameState != STATE_END) {
+                for (var i = 0; i < rootNode.updateFunctions.length; ++i) {
+                    rootNode.updateFunctions[i](rootNode, deltaTime);
+                }
             }
             
             var modelTransform = rootNode.localMatrix;
