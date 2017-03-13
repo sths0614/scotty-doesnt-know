@@ -92,7 +92,8 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 };
 
 var GravityTime = 0;
-var BallYPos = 8;
+var SPACESHIP_X_POS = -11;
+var spaceshipYPos = 8;
 var CEILING = 8;
 var FLOOR = -4;
 var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
@@ -107,10 +108,14 @@ var distanceIncrement = totalDistance/NUM_EXHAUST_CLUSTERS;
 var maxScale = 0.50;
 var minScale = 0.08;
 var scaleDecrement = (maxScale - minScale) / NUM_EXHAUST_CLUSTERS;
-var exhaust_material = new Material(Color(0.3, 0.3, 0.3, 1.0), .6, .2, 0, 20, "res/smoke.jpg");
+var exhaust_material = new Material(Color(0.8, 0.8, 0.8, 1.0), .6, .2, 0, 20);
 // var exhaust_material = new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100);
 
 var bodies = [];
+
+var AMPLITUDE_THRESHOLD = 10000;
+var laserExists = false;
+
 
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
@@ -200,7 +205,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_objectsFrame = new SceneGraphNode(
             null,
             null,
-            translation(-11, BallYPos, 0)
+            translation(SPACESHIP_X_POS, spaceshipYPos, 0)
         );
         this.sceneGraphBaseNode.addChild(this.node_objectsFrame);
         
@@ -375,12 +380,22 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
         
         
-        var rawFreqData = getRawFrequencyData();
+        var barFreqData = getBarFrequencyData();
         var sumAmplitude = 0;
-        for (let amp of rawFreqData) {
+        for (let amp of barFreqData) {
             sumAmplitude += amp;
         };
+
+        if (sumAmplitude > AMPLITUDE_THRESHOLD) {
+            console.log("SHOOT");
+            if (!laserExists) {
+                this.generateNode_laser();
+                laserExists = true;
+            }
+        }
         
+
+
         
         for( let b of bodies )
           { var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
@@ -431,21 +446,21 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             var dy = u + g * GravityTime;
 
             // ball hits upperbound
-            if (BallYPos + dy >= CEILING) {
-                dy = CEILING - BallYPos;
-                BallYPos = CEILING;
+            if (spaceshipYPos + dy >= CEILING) {
+                dy = CEILING - spaceshipYPos;
+                spaceshipYPos = CEILING;
             }
 
             // ball hits lower bound
-            else if (BallYPos + dy <= FLOOR) {
+            else if (spaceshipYPos + dy <= FLOOR) {
                 // TODO: Game end
-                dy = FLOOR - BallYPos;
-                BallYPos = FLOOR;
+                dy = FLOOR - spaceshipYPos;
+                spaceshipYPos = FLOOR;
             }
 
             // ball changes by dy 
             else {
-                BallYPos += dy;
+                spaceshipYPos += dy;
             }
 
             node.localMatrix = mult(
@@ -632,7 +647,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 
     },
     
-    
     'generateNode_smokeParticle' : function(spaceShipY) {
         var nodeParticle = new SceneGraphNode(
             shapes_in_use["cube"],
@@ -663,6 +677,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             }
         );
         return nodeParticle;
+    },
+
+
+    'generateNode_laser' : function() {
     }
     
     
