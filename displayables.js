@@ -101,14 +101,10 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 var score=0;
 var GravityTime = 0;
 var SPACESHIP_X_POS = -11;
-var spaceshipYPos = 8;
 var CEILING = 8;
 var FLOOR = -3;
-var EXHAUST_HISTORY_ARRAY_SIZE = 31; 
-var NUM_EXHAUST_CLUSTERS = 20;
-var DELAY_FACTOR = (EXHAUST_HISTORY_ARRAY_SIZE - 1) / NUM_EXHAUST_CLUSTERS;
-var ExhaustHistory = [];
-var curExhaustIndex = 0;
+var spaceshipYPos = (CEILING + FLOOR) / 2;
+//var spaceshipYPos = 8;
 
 var SMOKE_PARTICLE_SPEED = -3;
 var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.01;
@@ -117,7 +113,7 @@ var SMOKE_PARTICLE_LIMIT = SPACESHIP_X_POS - 100;
 var SMOKE_PARTICLE_MAX_SCALE = 0.2;
 
 
-var ASTEROID_MAX_SPEED = 5;
+var ASTEROID_MAX_SPEED = 8;
 var ASTEROID_MIN_SPEED = 1;
 var ASTEROID_SPAWN_INTERVAL = 2;
 //var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
@@ -128,11 +124,6 @@ var ASTEROID_MAX_YDISPLACEMENT = 10;
 
 
 // TODO
-var totalDistance = 8;
-var distanceIncrement = totalDistance/NUM_EXHAUST_CLUSTERS;
-var maxScale = 0.50;
-var minScale = 0.08;
-var scaleDecrement = (maxScale - minScale) / NUM_EXHAUST_CLUSTERS;
 var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fire_PNG6025.png");
 //var exhaust_material = new Material(Color(0.8, 0.8, 0.8, 1.0), .6, .2, 0, 20);
 // var exhaust_material = new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100);
@@ -155,6 +146,15 @@ var STATE_END = 3;
 
 var currGameState = STATE_BEGIN;
 
+function getRandomEndingTexture() {
+    var texturePrefix = "res/endingScreens/dead";
+    var textureSuffix = ".png";
+    var numTextures = 7;
+    var textureNumber = Math.floor(Math.random() * numTextures) + 1;
+    
+    return new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, texturePrefix + textureNumber.toString() + textureSuffix);
+}
+
 
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
@@ -176,6 +176,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.timeSinceLastSmokeSpawn = 0;
         this.timeSinceLastAsteroidSpawn = 0;
+        
+        spaceshipYPos = (CEILING + FLOOR) / 2;
+        score = 0;
+        bodies = [];
+        laserExists = false;
         
         // TODO:
         //      Create shapes needed for drawing here
@@ -349,6 +354,19 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             false
         );
         this.screenBound = false;
+//        this.screenBound = true;
+        
+        
+        this.node_endingScreen = new SceneGraphNode(
+            shapes_in_use.square,
+            getRandomEndingTexture(),
+            scale(this.screenScale,this.screenScale,this.screenScale),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+        
         
         //
         
@@ -366,7 +384,17 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'init_keys': function( controls )   // init_keys():  Define any extra keyboard shortcuts here
     {
        controls.add("space", this, function() {
-            GravityTime = 0;
+           if (currGameState == STATE_BEGIN) {
+               currGameState = STATE_PLAYING;
+           } else if (currGameState == STATE_PLAYING) {
+               GravityTime = 0;
+           } else if (currGameState == STATE_END) {
+               GravityTime = 0;
+               score = 0;
+               spaceshipYPos = (CEILING + FLOOR) / 2;
+               this.construct(tempContext);
+               currGameState = STATE_BEGIN;
+           }
        });
     },
     
@@ -376,8 +404,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'drawSceneGraph' : function (deltaTime, rootNode) {
         if (rootNode) {
             
-            for (var i = 0; i < rootNode.updateFunctions.length; ++i) {
-                rootNode.updateFunctions[i](rootNode, deltaTime);
+            if (currGameState != STATE_END) {
+                for (var i = 0; i < rootNode.updateFunctions.length; ++i) {
+                    rootNode.updateFunctions[i](rootNode, deltaTime);
+                }
             }
             
             var modelTransform = rootNode.localMatrix;
@@ -387,8 +417,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             rootNode.currWorldMatrix = modelTransform;
             
             if (rootNode.body) {
-                
-                // console.log(rootNode.shaderName);
                 shaders_in_use[rootNode.shaderName].activate();
                 
                 var tempTexTransform = mat4();
@@ -413,11 +441,33 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     },
 
     'endGame' : function() {
-        // bodies = [];
-        // this.sceneGraphBaseNode = null;
-        // this.construct(tempContext);
-        // window.onload();
-        score = 0;
+        
+        if (currGameState == STATE_END) return;
+        
+//        score = 0;
+//        spaceshipYPos = (CEILING + FLOOR) / 2;
+//        var texturePrefix = "res/EndTexture";
+//        var textureSuffix = ".png";
+//        var numTextures = 1;
+//        var textureNumber = Math.floor(Math.random() * numTextures) + 1;
+//        
+//        this.node_endingScreen = new SceneGraphNode(
+//            shapes_in_use.square,
+//            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, texturePrefix + textureNumber.toString() + textureSuffix),
+//            scale(this.screenScale,this.screenScale,this.screenScale),
+//            false,
+//            mat4(),
+//            "Default",
+//            false
+//        );
+        
+        currGameState = STATE_END;
+        
+//        console.log(this.sceneGraphBaseNode);
+        
+//        this.sceneGraphBaseNode.addChild(this.node_endingScreen);
+        
+        this.screenBound = false;
     },
     
     'display': function(time)
@@ -442,8 +492,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // Get delta time for animation
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
-
-        // console.log(currGameState);
         
         if (currGameState == STATE_PLAYING) {
         
@@ -470,15 +518,13 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     // var tempCollider = (b.bodyID == "spaceship" || c.bodyID == "spaceship") ? shapes_in_use.shape_ship : this.collider;
                   if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
                   { 
-                      // console.log("hit detected");
-                      // console.log("bodies: " + b.bodyID + " and " + c.bodyID);
                     var bID = b.bodyID;
                     var cID = c.bodyID;
 
                     if ((bID == "spaceship" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "spaceship")) {
                         // Trigger End Game State
-                        alert("you died haha");
+//                        alert("you died haha");
                         this.endGame();
                     } else if ((bID == "laser" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "laser")) {
@@ -523,8 +569,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             score = score + 1/60;
             
             if (this.screenBound) {
-                // console.log("UNbinding");
-                this.sceneGraphBaseNode.removeChild(this.node_beginningScreen);
+                console.log("UNbinding");
+                if (this.node_beginningScreen)
+                    this.sceneGraphBaseNode.removeChild(this.node_beginningScreen);
+                if (this.node_endingScreen)
+                    this.sceneGraphBaseNode.removeChild(this.node_endingScreen);
                 this.screenBound = false;
             }
 //            console.log(this.screenBound);
@@ -533,11 +582,17 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             
         } else if (currGameState == STATE_BEGIN) {
             if(!this.screenBound) {
-                // console.log("binding");
                 this.sceneGraphBaseNode.addChild(this.node_beginningScreen);
                 this.screenBound = true;
             }
             score = 0;
+        } else if (currGameState == STATE_END) {
+            if (!this.screenBound) {
+                console.log("binding");
+                this.node_endingScreen.material = getRandomEndingTexture();
+                this.sceneGraphBaseNode.addChild(this.node_endingScreen);
+                this.screenBound = true;
+            }
         }
         
         this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
@@ -556,39 +611,46 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'generateGravityFunction' : function(u, g) {
         // s(t) = ut + 1/2gt^2
         // v(t) = u + gt
+        
+        var endGameFunc = this.endGame;
+        
         return function(node, deltaTime) {
-            GravityTime += deltaTime;
-            // console.log(GravityTime);
+            if (currGameState == STATE_PLAYING) {
+                GravityTime += deltaTime;
+                // console.log(GravityTime);
 
-            // change in y in either direction
-            var dy = u + g * GravityTime;
+                // change in y in either direction
+                var dy = u + g * GravityTime;
 
-            // ball hits upperbound
-            if (spaceshipYPos + dy >= CEILING) {
-                dy = CEILING - spaceshipYPos;
-                spaceshipYPos = CEILING;
+
+                // ball hits upperbound
+                if (spaceshipYPos + dy >= CEILING) {
+                    dy = CEILING - spaceshipYPos;
+                    spaceshipYPos = CEILING;
+                }
+                // ball hits lower bound
+                else if (spaceshipYPos + dy <= FLOOR) {
+                    // TODO: Game end
+                    dy = FLOOR - spaceshipYPos;
+                    spaceshipYPos = FLOOR;
+                    
+                    endGameFunc();
+                }
+
+                // ball changes by dy 
+                else {
+                    spaceshipYPos += dy;
+                }
+
+                node.localMatrix = mult(
+                    translation(
+                        0, 
+                        dy,
+                        0
+                    ),
+                    node.localMatrix
+                );
             }
-
-            // ball hits lower bound
-            else if (spaceshipYPos + dy <= FLOOR) {
-                // TODO: Game end
-                dy = FLOOR - spaceshipYPos;
-                spaceshipYPos = FLOOR;
-            }
-
-            // ball changes by dy 
-            else {
-                spaceshipYPos += dy;
-            }
-
-            node.localMatrix = mult(
-                translation(
-                    0, 
-                    dy,
-                    0
-                ),
-                node.localMatrix
-            );
         };
     },
     'generateRotateFunction' : function(RPM, rotationAxis) {
