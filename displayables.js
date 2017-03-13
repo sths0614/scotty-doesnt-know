@@ -121,7 +121,7 @@ var ASTEROID_SPAWN_INTERVAL = 2;
 var ASTEROID_LIMIT = -40;//SPACESHIP_X_POS - 100;
 var ASTEROID_MAX_SCALE = 1;
 var ASTEROID_MIN_SCALE = 0.3;
-var ASTEROID_MAX_YDISPLACEMENT = 5;
+var ASTEROID_MAX_YDISPLACEMENT = 10;
 
 
 // TODO
@@ -137,17 +137,20 @@ var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fir
 var bodies = [];
 
 //var AMPLITUDE_THRESHOLD = 100  ;
-var AMPLITUDE_THRESHOLD = 1000  ;
+var AMPLITUDE_THRESHOLD = 10000  ;
 var laserExists = false;
 var LASER_SPEED = 5;
 // var laserTime = 0;
 var LASER_LIFETIME = 5.5;
+
+var tempContext;
 
 
 Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
 {
     'construct': function( context )
     {
+        tempContext = context;
         // Note:
         // T * R * S
         
@@ -290,7 +293,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         this.node_text.updateFunctions.push(
             function(node, deltaTime) {
-                shapes_in_use.shape_text.set_string("Panang Curry");
+                shapes_in_use.shape_text.set_string("Scotty Doesn't Know");
         });
          this.sceneGraphBaseNode.addChild(this.node_text);
         
@@ -380,6 +383,14 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             }
         }
     },
+
+    'endGame' : function() {
+        // bodies = [];
+        // this.sceneGraphBaseNode = null;
+        // this.construct(tempContext);
+        // window.onload();
+        score = 0;
+    },
     
     'display': function(time)
     {
@@ -438,6 +449,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     (bID == "asteroid" && cID == "spaceship")) {
                     // Trigger End Game State
                     alert("you died haha");
+                    this.endGame();
                 } else if ((bID == "laser" && cID == "asteroid") || 
                     (bID == "asteroid" && cID == "laser")) {
                     laserExists = false;
