@@ -167,6 +167,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
+        shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/ship5.obj");
         shapes_in_use["shape_text"] = new Text_Line(35);
         shapes_in_use["shape_textScore"] = new Text_Line(35);
 
@@ -252,9 +253,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         
         this.node_spaceship = new SceneGraphNode(
-            shapes_in_use.shape_asteroid,
-            new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/asteroid/ast4.jpg"),
-            scale(0.8, 0.8, 0.8),
+            shapes_in_use.shape_ship,
+            new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/space-ship/original-texture.jpg"),
+            mult(rotation(110, [0.1, 1, 0.2]), scale(0.8, 0.8, 0.6)),
             false,
             mat4(),
             "Bump Map",
@@ -574,7 +575,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             exhaust_material,
             mult(
                 mult(
-                    translation(SPACESHIP_X_POS, spaceshipYPos, 0),
+                    translation(SPACESHIP_X_POS-1.8, spaceshipYPos, 0),
                     rotation(Math.random() * 360, [Math.random(), Math.random(), Math.random()])
                 ),
                 scale(randScale, randScale, randScale)
