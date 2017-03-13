@@ -95,7 +95,7 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
         }
     }
 };
-
+var score=0;
 var GravityTime = 0;
 var SPACESHIP_X_POS = -11;
 var spaceshipYPos = 8;
@@ -168,6 +168,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
         shapes_in_use["shape_text"] = new Text_Line(35);
+        shapes_in_use["shape_textScore"] = new Text_Line(35);
+
         shapes_in_use["cube"] = new Cube();
         
         // Scene Graph
@@ -268,7 +270,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_text = new SceneGraphNode(
             shapes_in_use["shape_text"],
             Color(0, 0, 0, 1),
-            mat4(),
+            mult(translation(-16, 8.5, 0), scale(0.3,0.3,0.3)),
             false,
             null,
             "Default",
@@ -276,11 +278,24 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         this.node_text.updateFunctions.push(
             function(node, deltaTime) {
-                shapes_in_use.shape_text.set_string("hello");
+                shapes_in_use.shape_text.set_string("Panang Curry");
         });
-        // this.sceneGraphBaseNode.addChild(this.node_text);
+         this.sceneGraphBaseNode.addChild(this.node_text);
         
-        
+        this.node_textScore = new SceneGraphNode(
+            shapes_in_use["shape_textScore"],
+            Color(0, 0, 0, 1),
+            mult(translation(-16, 7.5, 0), scale(0.3,0.3,0.3)),
+            false,
+            null,
+            "Default",
+            false
+        );
+        this.node_textScore.updateFunctions.push(
+            function(node, deltaTime) {
+                //shapes_in_use.shape_text.set_string("Space Invaders");
+        });
+         this.sceneGraphBaseNode.addChild(this.node_textScore);
         
         // Asteroid stuff
         this.node_asteroidFrame = new SceneGraphNode(
@@ -429,7 +444,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
 
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
-
+        score = score + 1/60;
+        this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
 //        console.log(this.node_asteroidFrame.children.length);
     },
     
