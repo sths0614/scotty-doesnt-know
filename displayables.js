@@ -131,11 +131,11 @@ var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fir
 var bodies = [];
 
 //var AMPLITUDE_THRESHOLD = 100  ;
-var AMPLITUDE_THRESHOLD = 10000  ;
+var AMPLITUDE_THRESHOLD = 6000  ;
 var laserExists = false;
 var LASER_SPEED = 5;
 // var laserTime = 0;
-var LASER_LIFETIME = 5.5;
+var LASER_LIFETIME = 10;
 
 var tempContext;
 
@@ -347,7 +347,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_beginningScreen = new SceneGraphNode(
             shapes_in_use.square,
             new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/StartTexture.png"),
-            scale(this.screenScale,this.screenScale,this.screenScale),
+            mult(
+                translation(0, 0, 5),
+                scale(this.screenScale,this.screenScale,this.screenScale)
+                ),
             false,
             mat4(),
             "Default",
@@ -360,7 +363,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_endingScreen = new SceneGraphNode(
             shapes_in_use.square,
             getRandomEndingTexture(),
-            scale(this.screenScale,this.screenScale,this.screenScale),
+            mult(
+                translation(0, 0, 5),
+                scale(this.screenScale,this.screenScale,this.screenScale)
+                ),
             false,
             mat4(),
             "Default",
@@ -497,7 +503,10 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.lastDrawTime = time;
         
         if (currGameState == STATE_PLAYING) {
-        
+            ASTEROID_MAX_SPEED = Math.floor((score / 10)) * 4 + 4;
+            ASTEROID_MIN_SPEED = Math.floor((score / 10)) * 1 + 1;
+            
+            
     //        console.log("length of bodies: " + bodies.length);
             var toKill = [];
             for( var i = 0; i < bodies.length; ++i) 
@@ -558,14 +567,16 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             for (let amp of barFreqData) {
                 sumAmplitude += amp;
             };
-
+            
+            console.log(sumAmplitude);
 
             if (!laserExists && sumAmplitude > AMPLITUDE_THRESHOLD) {
                 var laser_sound = new Audio("res/laser.mp3");
-                laser_sound.volume = 0.3;
+                laser_sound.volume = 0.4;
                 laser_sound.loop = false;
                 laser_sound.play();
-                this.generateNode_laser(0.3, 0.1, 0.1);
+                this.generateNode_laser(0.4, 0.1, 0.1);
+//                this.generateNode_laser(0.3, 0.1, 0.1);
             }
 
             // Spawn Asteroids
@@ -830,7 +841,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'generateNode_laser' : function(laserXScale, laserYScale, laserZScale) {
         this.node_laser = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0.0, 0.0, 0.0, 0.2), .9, .8, 0.2, 60, "res/space-ship/laser.jpg"),
+            new Material(Color(0.0, 0.0, 0.0, 0.2), .9, .8, 0.7, 40, "res/space-ship/laserBlue.png"),
+//            new Material(Color(0.0, 0.0, 0.0, 0.2), .9, .8, 0.2, 60, "res/space-ship/laser.jpg"),
             in_localMatrix = mult(
                 translation(SPACESHIP_X_POS + 1, spaceshipYPos, 0),
                 scale(laserXScale, laserYScale, laserZScale)
@@ -840,6 +852,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             "Default",
             true
         );
+//        this.node_laser.updateFunctions.push(
+//            this.generateRotateFunction(10, [1, 0, 0])
+//        );
         this.node_laser.body.bodyID = "laser";
         laserExists = true;
         this.node_laser.time = 0;

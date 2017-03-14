@@ -69,7 +69,7 @@ function setupAudio() {
 //          // Ready to go. Do some stuff.
 //        };
         var background_music = new Audio("res/vitas.mp3");
-        background_music.volume = 0.3;
+        background_music.volume = 0.1;
         background_music.loop = true;
         background_music.play();
 
@@ -138,6 +138,7 @@ function setupCanvas() {
     textureNames.push("res/space-ship/laser.jpg");
     textureNames.push("res/StartTexture.png");
     textureNames.push("res/EndTexture1.png");
+    textureNames.push("res/space-ship/laserBlue.png");
     
     for (var i = 1; i <= 7; ++i) {
         textureNames.push("res/endingScreens/dead" + i.toString() + ".png");
