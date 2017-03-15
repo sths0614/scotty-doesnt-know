@@ -119,7 +119,7 @@ var AMPLITUDE_THRESHOLD = 6000;
 
 var laserExists;
 var LASER_SPEED = 5;
-var LASER_LIFETIME = 10;
+var LASER_LIFETIME = 5.5;
 
 var tempContext;
 
