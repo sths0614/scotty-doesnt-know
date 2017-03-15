@@ -7,29 +7,15 @@ Declare_Any_Class( "Main_Camera",     // An example of a displayable object that
         
         // 1st parameter below is our starting camera matrix.  2nd is the projection:  The matrix that determines how depth is treated.  It projects 3D points onto a plane.
         this.shared_scratchpad.graphics_state = new Graphics_State( translation(0, 0,-20), perspective(50, canvas.width/canvas.height, .1, 1000), 0 );
-//        this.shared_scratchpad.graphics_state = new Graphics_State( translation(-2, 0, -20), perspective(10, canvas.width/canvas.height, .1, 1000), 0 );
         this.define_data_members( { graphics_state: this.shared_scratchpad.graphics_state, thrust: vec3(), origin: vec3( 0, 0, 0 ), looking: false } );
     },
     
     
     'init_keys': function( controls )   // init_keys():  Define any extra keyboard shortcuts here
     {
-//        controls.add("i", this, function() {
-//            this.graphics_state.camera_transform = mult(
-//                translation(scale_vec(1, [0, 0, 1])),
-//                this.graphics_state.camera_transform
-//            );
-//        });
-//
         controls.add("f", this, function() {
             document.getElementById("gl-canvas").webkitRequestFullscreen();
         });
-//        controls.add("o", this, function() {
-//            this.graphics_state.camera_transform = mult(
-//                translation(scale_vec(1, [0, 0, -1])),
-//                this.graphics_state.camera_transform
-//            );
-//        });
     },
     
     'update_strings': function( user_interface_string_manager )       // Strings that this displayable object (Animation) contributes to the UI:
@@ -98,13 +84,13 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
         }
     }
 };
+
 var score=0;
 var GravityTime = 0;
 var SPACESHIP_X_POS = -11;
 var CEILING = 8;
 var FLOOR = -4;
 var spaceshipYPos = (CEILING + FLOOR) / 2;
-//var spaceshipYPos = 8;
 
 var SMOKE_PARTICLE_SPEED = -3;
 var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.01;
@@ -116,27 +102,22 @@ var SMOKE_PARTICLE_MAX_SCALE = 0.2;
 var ASTEROID_MAX_SPEED = 8;
 var ASTEROID_MIN_SPEED = 1;
 var ASTEROID_SPAWN_INTERVAL = 1;
-//var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
-var ASTEROID_LIMIT = -40;//SPACESHIP_X_POS - 100;
+var ASTEROID_LIMIT = -40;
 var ASTEROID_MAX_SCALE = 1;
 var ASTEROID_MIN_SCALE = 0.3;
 var ASTEROID_MAX_YDISPLACEMENT = 10;
 
 
-// TODO
 var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/space-ship/exhaust.png");
 
 var bodies = [];
 
-//var AMPLITUDE_THRESHOLD = 100  ;
 var AMPLITUDE_THRESHOLD = 6000  ;
 var laserExists = false;
 var LASER_SPEED = 5;
-// var laserTime = 0;
 var LASER_LIFETIME = 10;
 
 var tempContext;
-
 
 var STATE_BEGIN = 1;
 var STATE_PLAYING = 2;
@@ -154,7 +135,7 @@ function getRandomEndingTexture() {
 }
 
 
-Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our class Canvas_Manager can manage.  This one draws the scene's 3D shapes.
+Declare_Any_Class( "Main_Scene",  
 {
     'construct': function( context )
     {
@@ -165,7 +146,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // DO NOT REMOVE THIS SCRATCHPAD LINE
         this.shared_scratchpad    = context.shared_scratchpad;
         //
-        
         
         this.collider = new Subdivision_Sphere(3);
         
@@ -180,8 +160,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         bodies = [];
         laserExists = false;
         
-        // TODO:
-        //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
         shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/jellyfish.obj");
@@ -196,9 +174,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         // Scene Graph
         
         this.sceneGraphBaseNode = new SceneGraphNode();
-        
-        // Material Syntax
-//        color, ambient, diffusivity, shininess, smoothness, texture_filename
         
         // Nodes
         this.sceneGraphNodes = [];
@@ -246,7 +221,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.sceneGraphBaseNode.addChild(this.node_backgroundFrame);
         this.node_background = new SceneGraphNode(
-             shapes_in_use.sphere,
+            shapes_in_use.sphere,
             new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/star.gif"),
             mat4(),
             false,
@@ -273,17 +248,15 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         
         this.node_spaceship = new SceneGraphNode(
-            // shapes_in_use.sphere,
             shapes_in_use.shape_ship,
             new Material(Color(0, 0, 0, 1), 0.7, 0.8, 0, 20, "res/space-ship/original-texture.jpg"),
-            // mat4(),
             mult(
                 mult(
-                    rotation(90, [0, 1, 0]), scale(0.8, 0.8, 0.8)    
-                    ),
-                rotation(110, [0, 0, 0.7])
+                    rotation(90, [0, 1, 0]), 
+                    scale(0.8, 0.8, 0.8)    
                 ),
-           // mult(rotation(110, [0.1, 1, 0.2]), scale(0.8, 0.8, 0.6)),
+                rotation(110, [0, 0, 0.7])
+            ),
             false,
             mat4(),
             "Bump Map",
@@ -320,12 +293,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             "Default",
             false
         );
-//        shapes_in_use.shape_textScore.set_string("" + 0 + "");
-//        this.node_textScore.updateFunctions.push(
-//            function(node, deltaTime) {
-//                //shapes_in_use.shape_text.set_string("Space Invaders");
-//        });
-         this.sceneGraphBaseNode.addChild(this.node_textScore);
+        this.sceneGraphBaseNode.addChild(this.node_textScore);
         
         // Asteroid stuff
         this.node_asteroidFrame = new SceneGraphNode(
@@ -342,7 +310,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.screenScale = 8;
         this.node_beginningScreen = new SceneGraphNode(
             shapes_in_use.square,
-            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/beginningScreens/startTexture.png"),
+            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/beginning-screens/startTexture.png"),
             mult(
                 translation(0, 0, 5),
                 scale(this.screenScale,this.screenScale,this.screenScale)
@@ -353,8 +321,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             false
         );
         this.screenBound = false;
-//        this.screenBound = true;
-        
         
         this.node_endingScreen = new SceneGraphNode(
             shapes_in_use.square,
@@ -370,15 +336,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         
         
-        //
-        
-        
         // END: Nodes
         
         // END: Scene Graph
         
-        if (hasGetUserMedia()) {
-        } else {
+        if (!hasGetUserMedia()) {
           alert('getUserMedia() is not supported in your browser');
         }
     },
@@ -443,34 +405,16 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     },
 
     'endGame' : function() {
+        if (currGameState == STATE_END) {
+            return;
+        }
+
         var crash_sound = new Audio("res/crash.mp3");
         crash_sound.volume = 1.0;
         crash_sound.loop = false;
         crash_sound.play();
-        if (currGameState == STATE_END) return;
-        
-//        score = 0;
-//        spaceshipYPos = (CEILING + FLOOR) / 2;
-//        var texturePrefix = "res/EndTexture";
-//        var textureSuffix = ".png";
-//        var numTextures = 1;
-//        var textureNumber = Math.floor(Math.random() * numTextures) + 1;
-//        
-//        this.node_endingScreen = new SceneGraphNode(
-//            shapes_in_use.square,
-//            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, texturePrefix + textureNumber.toString() + textureSuffix),
-//            scale(this.screenScale,this.screenScale,this.screenScale),
-//            false,
-//            mat4(),
-//            "Default",
-//            false
-//        );
         
         currGameState = STATE_END;
-        
-//        console.log(this.sceneGraphBaseNode);
-        
-//        this.sceneGraphBaseNode.addChild(this.node_endingScreen);
         
         this.screenBound = false;
     },
@@ -478,21 +422,16 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     'display': function(time)
     {
         var graphics_state  = this.shared_scratchpad.graphics_state,
-            model_transform = mat4();             // We have to reset model_transform every frame, so that as each begins, our basis starts as the identity.
-//        shaders_in_use[ "Default" ].activate();
+            model_transform = mat4();             
 
         // *** Lights: *** Values of vector or point lights over time.  Arguments to construct a Light(): position or vector (homogeneous coordinates), color, size
         // If you want more than two lights, you're going to need to increase a number in the vertex shader file (index.html).  For some reason this won't work in Firefox.
         graphics_state.lights = [];                    // First clear the light list each frame so we can replace & update lights.
-//        this.shared_scratchpad.graphics_state.lights.push(new Light(vec4(10, 10, 10, 1), Color(1, 0, 0, 1), 100000));
         
         // Point lighting from inside sun
-//        graphics_state.lights.push(new Light(vec4(100, 100, 0, 1), Color(1, 1, 1, 1), 1000000000000000));
         graphics_state.lights.push(new Light(vec4(100, 100, 0, 1), Color(1, 1, 1, 1), 100000));
         
-        // Extra light source below sun just to light up sun's geometry so it doesn't look so bland and like a circle
-//        graphics_state.lights.push(new Light(vec4(0, 0, 0, 1), Color(1, 1, 1, 1), 100000));
-        
+        // Extra light source below sun just to light up sun's geometry so it doesn't look so bland and like a circle        
         
         // Get delta time for animation
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
@@ -502,28 +441,19 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             ASTEROID_MAX_SPEED = Math.floor((score / 10)) * 4 + 4;
             ASTEROID_MIN_SPEED = Math.floor((score / 10)) * 1 + 1;
             
-            
-    //        console.log("length of bodies: " + bodies.length);
             var toKill = [];
             for( var i = 0; i < bodies.length; ++i) 
-            // for( let b of bodies )
             { 
                 var bnode = bodies[i];
                 var b = bodies[i].body;
                 var b_inv = inverse( mult( b.location_matrix, scale( b.scale ) ) );               // Cache b's final transform
 
                 var center = mult_vec( b.location_matrix, vec4( 0, 0, 0, 1 ) ).slice(0,3);        // Center of the body
-    //            b.linear_velocity = subtract( b.linear_velocity, scale_vec( .0003, center ) );    // Apply a small centripetal force to everything
-    //            b.material = new Material( Color( 1,1,1,1 ), .1,1, 1, 40 );                      // Default color: white
 
                 for( var j = i; j < bodies.length; ++j)
-                // for( let c of bodies ) {
                 {
-
                     var cnode = bodies[j];
                     var c = bodies[j].body;
-                    // Collision process starts here
-                    // var tempCollider = (b.bodyID == "spaceship" || c.bodyID == "spaceship") ? shapes_in_use.shape_ship : this.collider;
                   if( b.check_if_colliding( c, b_inv, this.collider ) )          // Send the two bodies and the collision shape
                   { 
                     var bID = b.bodyID;
@@ -531,12 +461,9 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
 
                     if ((bID == "spaceship" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "spaceship")) {
-                        // Trigger End Game State
-//                        alert("you died haha");
                         this.endGame();
                     } else if ((bID == "laser" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "laser")) {
-
                         var explosion_sound = new Audio("res/explosion.mp3");
                         explosion_sound.volume = 1.0;
                         explosion_sound.loop = false;
@@ -545,8 +472,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                         toKill.push(bnode);
                         toKill.push(cnode);
                     } else if ((bID == cID) && (bID == "asteroid")) {
-                        // Momentum
-
+                        // TODO: Momentum
                     }
                   }
                 }
@@ -572,15 +498,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 laser_sound.loop = false;
                 laser_sound.play();
                 this.generateNode_laser(0.4, 0.1, 0.1);
-//                this.generateNode_laser(0.3, 0.1, 0.1);
             }
 
             // Spawn Asteroids
             this.timeSinceLastAsteroidSpawn += this.deltaTime;
-    //        console.log(this.timeSinceLastAsteroidSpawn);
-    //        console.log(ASTEROID_SPAWN_INTERVAL);
             if (this.timeSinceLastAsteroidSpawn > ASTEROID_SPAWN_INTERVAL) {
-    //            console.log("stuff");
                 this.generateNode_asteroid();
                 this.timeSinceLastAsteroidSpawn = 0;
             }
@@ -595,9 +517,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                     this.sceneGraphBaseNode.removeChild(this.node_endingScreen);
                 this.screenBound = false;
             }
-//            console.log(this.screenBound);
-            
-            
             
         } else if (currGameState == STATE_BEGIN) {
             if(!this.screenBound) {
@@ -636,7 +555,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         return function(node, deltaTime) {
             if (currGameState == STATE_PLAYING) {
                 GravityTime += deltaTime;
-                // console.log(GravityTime);
 
                 // change in y in either direction
                 var dy = u + g * GravityTime;
@@ -649,13 +567,11 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 }
                 // ball hits lower bound
                 else if (spaceshipYPos + dy <= FLOOR) {
-                    // TODO: Game end
                     dy = FLOOR - spaceshipYPos;
                     spaceshipYPos = FLOOR;
                     
                     endGameFunc();
                 }
-
                 // ball changes by dy 
                 else {
                     spaceshipYPos += dy;
@@ -708,8 +624,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 index += EXHAUST_HISTORY_ARRAY_SIZE;
             }
             var dy = ExhaustHistory[index];
-            // var rand = (Math.random() * 0.1) - 0.05;
-            // dy += rand;
             node.localMatrix = mult(
                 translation(
                     0,
@@ -776,12 +690,8 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         );
         nodeParticle.updateFunctions.push(
             function(node, deltaTime) {
-//                node.currXLoc += SMOKE_PARTICLE_SPEED;
                 node.currXLoc += (deltaTime * SMOKE_PARTICLE_SPEED);
                 node.totalTime += deltaTime;
-//                if (node.currXLoc < SMOKE_PARTICLE_LIMIT) {
-//                    node.parent.removeChild(node);
-//                }
                 if (node.totalTime > SMOKE_PARTICLE_TIME_LIMIT) {
                     node.parent.removeChild(node);
                 }
@@ -792,7 +702,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
     },
     
     'generateNode_asteroid' : function() {
-        // console.log("creating asteroid");
         var randScale = (Math.random() * (ASTEROID_MAX_SCALE - ASTEROID_MIN_SCALE) + ASTEROID_MIN_SCALE);
         
         var nodeAsteroid = new SceneGraphNode(
@@ -824,9 +733,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
                 if (node.currXLoc < ASTEROID_LIMIT) {
                     node.parent.removeChild(node);
                 }
-//                if (node.totalTime > SMOKE_PARTICLE_TIME_LIMIT) {
-//                    node.parent.removeChild(node);
-//                }
             }
         );
         this.node_asteroidFrame.addChild(nodeAsteroid);
@@ -838,7 +744,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.node_laser = new SceneGraphNode(
             shapes_in_use.sphere,
             new Material(Color(0.0, 0.0, 0.0, 0.2), .9, .8, 0.7, 40, "res/space-ship/laserBlue.png"),
-//            new Material(Color(0.0, 0.0, 0.0, 0.2), .9, .8, 0.2, 60, "res/space-ship/laser.jpg"),
             in_localMatrix = mult(
                 translation(SPACESHIP_X_POS + 1, spaceshipYPos, 0),
                 scale(laserXScale, laserYScale, laserZScale)
@@ -848,9 +753,6 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
             "Default",
             true
         );
-//        this.node_laser.updateFunctions.push(
-//            this.generateRotateFunction(10, [1, 0, 0])
-//        );
         this.node_laser.body.bodyID = "laser";
         laserExists = true;
         this.node_laser.time = 0;
@@ -876,9 +778,6 @@ function hasGetUserMedia() {
   return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
-
-
-
 
 //  Corrections / additions:
 
