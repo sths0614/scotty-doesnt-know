@@ -449,7 +449,7 @@ Declare_Any_Class( "Main_Scene",
 
                 var center = mult_vec( b.location_matrix, vec4( 0, 0, 0, 1 ) ).slice(0,3);        // Center of the body
 
-                for( var j = i; j < bodies.length; ++j)
+                for( var j = i + 1; j < bodies.length; ++j)
                 {
                     var cnode = bodies[j];
                     var c = bodies[j].body;
