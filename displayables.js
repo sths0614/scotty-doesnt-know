@@ -124,9 +124,7 @@ var ASTEROID_MAX_YDISPLACEMENT = 10;
 
 
 // TODO
-var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/fire_PNG6025.png");
-//var exhaust_material = new Material(Color(0.8, 0.8, 0.8, 1.0), .6, .2, 0, 20);
-// var exhaust_material = new Material(Color((188.0/255.0), (134.0/255.0), (96.0/255.0), 1), .4, .6, 0.3, 100);
+var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/space-ship/exhaust.png");
 
 var bodies = [];
 
@@ -147,7 +145,7 @@ var STATE_END = 3;
 var currGameState = STATE_BEGIN;
 
 function getRandomEndingTexture() {
-    var texturePrefix = "res/endingScreens/dead";
+    var texturePrefix = "res/ending-screens/dead";
     var textureSuffix = ".png";
     var numTextures = 7;
     var textureNumber = Math.floor(Math.random() * numTextures) + 1;
@@ -186,9 +184,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         //      Create shapes needed for drawing here
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
-        //shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/jellyfish.obj");
         shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/jellyfish.obj");
-        // shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/ship5.obj");
         shapes_in_use["shape_text"] = new Text_Line(35);
         shapes_in_use["shape_textScore"] = new Text_Line(35);
 
@@ -225,7 +221,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         
         this.node_planet = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.8, 0.9, 0.8, 20, "res/planet.jpg"), //"res/earthmap1-test.jpg")
+            new Material(Color(0, 0, 0, 1), 0.8, 0.9, 0.8, 20, "res/planet.jpg"),
             mat4(),
             false,
             mat4(),
@@ -251,7 +247,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.sceneGraphBaseNode.addChild(this.node_backgroundFrame);
         this.node_background = new SceneGraphNode(
              shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/star10.gif"),
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/star.gif"),
             mat4(),
             false,
             mat4(),
@@ -346,7 +342,7 @@ Declare_Any_Class( "Main_Scene",  // An example of a displayable object that our
         this.screenScale = 8;
         this.node_beginningScreen = new SceneGraphNode(
             shapes_in_use.square,
-            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/StartTexture.png"),
+            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/beginningScreens/startTexture.png"),
             mult(
                 translation(0, 0, 5),
                 scale(this.screenScale,this.screenScale,this.screenScale)

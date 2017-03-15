@@ -21,12 +21,7 @@ window.onload = function init() {
 }
 
 window.onresize = function() {
-    // glCanvas.width = window.innerWidth;
-    // glCanvas.height = window.innerHeight;
-    // gl.canvas.width = gl.canvas.clientWidth;
-    // gl.canvas.height = gl.canvas.clientHeight;
-    // console.log("resize");
-    // console.log(gl.canvas.width);
+
 }
 
 function setupAudio() {
@@ -38,17 +33,14 @@ function setupAudio() {
 
     // Not showing vendor prefixes.
     navigator.getUserMedia({video: false, audio: true}, function(localMediaStream) {
-        // TODO: remove video elements
-//        var video = document.querySelector('video');
-//        video.src = window.URL.createObjectURL(localMediaStream);
 
-        // TODO: may need 2 identical source for 2 connects
         audioSource = audioContext.createMediaStreamSource(localMediaStream);
         filter = audioContext.createBiquadFilter();
 
+        // removed to avoid feedback loop
         // audioSource -> filter -> destination
-//        audioSource.connect(filter);
-//        filter.connect(audioContext.destination);
+        // audioSource.connect(filter);
+        // filter.connect(audioContext.destination);
 
         // connect to the analyzer
         audioAnalyzer = audioContext.createAnalyser();
@@ -58,16 +50,8 @@ function setupAudio() {
         barAudioAnalyzer = audioContext.createAnalyser();
         audioSource.connect(barAudioAnalyzer);
         barAudioAnalyzer.fftSize = freqData_fftSize;
-        barFrequencyData = new Uint8Array(barAudioAnalyzer.frequencyBinCount);
+        barFrequencyData = new Uint8Array(barAudioAnalyzer.frequencyBinCount);   
 
-        // console.log(audioAnalyzer.frequencyBinCount);
-        // console.log(barAudioAnalyzer.frequencyBinCount);   
-
-        // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
-        // See crbug.com/110938.
-//        video.onloadedmetadata = function(e) {
-//          // Ready to go. Do some stuff.
-//        };
         var background_music = new Audio("res/vitas.mp3");
         background_music.volume = 0.1;
         background_music.loop = true;
@@ -79,13 +63,6 @@ function setupAudio() {
         exhaust_music.play();
         
     }, errorCallback);
-
-
-
-
-    // console.log(audioContext);
-    // console.log(audioSource);
-    // console.log(audioAnalyzer);
 }
 
 function getRawFrequencyData() {
@@ -95,7 +72,6 @@ function getRawFrequencyData() {
     } else {
         rawFrequencyData = new Uint8Array(0);
     }
-//    console.log("Frequency Data: " + rawFrequencyData);
     return rawFrequencyData;
 }
 
@@ -105,7 +81,6 @@ function getBarFrequencyData() {
         barAudioAnalyzer.getByteFrequencyData(barFrequencyData);
     } else {
         barFrequencyData = new Uint8Array(0);
-
     }
     return barFrequencyData;
 }
@@ -118,44 +93,30 @@ function setupCanvas() {
     mainCanvas = new Canvas_Manager("gl-canvas", Color(0, 0, 0, 1)),
          graphicsState = mainCanvas.shared_scratchpad.graphics_state;
     
-
-
     shaders_in_use["Default"] = new Phong_or_Gouraud_Shader(graphicsState);
     shaders_in_use["Bump Map"] = new Fake_Bump_Mapping(graphicsState);
     
     var textureNames = [];
-//    textureNames.push("res/candy-cane-wallpaper-25.png");
-    textureNames.push("res/earthmap1-test.jpg");
-    textureNames.push("res/smoke.jpg");
-    textureNames.push("res/smoke.png");
-  //  textureNames.push("res/earthmap1-test.jpg");
-     textureNames.push("res/planet.jpg");
-    textureNames.push("res/asteroid/ast4.jpg");
-    textureNames.push("res/star10.gif");
     textureNames.push("text.png");
-    textureNames.push("res/fire_PNG6025.png");
+    textureNames.push("res/planet.jpg");
+    textureNames.push("res/asteroid/ast4.jpg");
+    textureNames.push("res/star.gif");
+    textureNames.push("res/space-ship/exhaust.png");
     textureNames.push("res/space-ship/original-texture.jpg");
     textureNames.push("res/space-ship/laser.jpg");
-    textureNames.push("res/StartTexture.png");
-    textureNames.push("res/EndTexture1.png");
     textureNames.push("res/space-ship/laserBlue.png");
+    textureNames.push("res/beginning-screens/startTexture.png");
     
     for (var i = 1; i <= 7; ++i) {
-        textureNames.push("res/endingScreens/dead" + i.toString() + ".png");
+        textureNames.push("res/ending-screens/dead" + i.toString() + ".png");
     }
     
     for (var i = 0; i < textureNames.length; ++i) {
         textures_in_use[textureNames[i]] = new Texture(textureNames[i], true);
     }
     
-//    textures_in_use[pic1] = new Texture(pic1, false);
-//    textures_in_use[pic2] = new Texture(pic2, true);
-    
     mainCanvas.register_display_object(new Main_Scene(mainCanvas));
     mainCanvas.register_display_object(new Main_Camera(mainCanvas));
-    
-    
-
     
     mainCanvas.render();
 }
@@ -170,6 +131,7 @@ window.requestAnimFrame = ( function()						// Use the correct browser's version
         window.oRequestAnimationFrame ||
         window.msRequestAnimationFrame ||
 
+        // 60 FPS
         function( callback, element) { window.setTimeout(callback, 1000/60);  }
         );
 })();
