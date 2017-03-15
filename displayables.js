@@ -85,19 +85,22 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
     }
 };
 
-var score=0;
-var GravityTime = 0;
+var score;
+
+var gravityTime;
+var INITIAL_VELOCITY = 0.18;
+var GRAVITY_CONSTANT = -10/20;
+
 var SPACESHIP_X_POS = -11;
 var CEILING = 8;
 var FLOOR = -4;
-var spaceshipYPos = (CEILING + FLOOR) / 2;
+var spaceshipYPos;
 
 var SMOKE_PARTICLE_SPEED = -3;
 var SMOKE_PARTICLE_SPAWN_INTERVAL = 0.01;
 var SMOKE_PARTICLE_TIME_LIMIT = 0.9;      // in seconds
 var SMOKE_PARTICLE_LIMIT = SPACESHIP_X_POS - 100;
 var SMOKE_PARTICLE_MAX_SCALE = 0.2;
-
 
 var ASTEROID_MAX_SPEED = 8;
 var ASTEROID_MIN_SPEED = 1;
@@ -107,13 +110,13 @@ var ASTEROID_MAX_SCALE = 1;
 var ASTEROID_MIN_SCALE = 0.3;
 var ASTEROID_MAX_YDISPLACEMENT = 10;
 
+var EXHAUST_MATERIAL = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/space-ship/exhaust.png");
 
-var exhaust_material = new Material(Color(1, 0.1, 0.1, 0), 1, 0, 0, 20, "res/space-ship/exhaust.png");
+var bodies;
 
-var bodies = [];
+var AMPLITUDE_THRESHOLD = 6000;
 
-var AMPLITUDE_THRESHOLD = 6000  ;
-var laserExists = false;
+var laserExists;
 var LASER_SPEED = 5;
 var LASER_LIFETIME = 10;
 
@@ -155,10 +158,12 @@ Declare_Any_Class( "Main_Scene",
         this.timeSinceLastSmokeSpawn = 0;
         this.timeSinceLastAsteroidSpawn = 0;
         
+        // initialize global variables
         spaceshipYPos = (CEILING + FLOOR) / 2;
         score = 0;
         bodies = [];
         laserExists = false;
+        gravityTime = 0;
         
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
@@ -169,7 +174,6 @@ Declare_Any_Class( "Main_Scene",
         shapes_in_use["cube"] = new Cube();
         
         shapes_in_use["square"] = new Square();
-        
         
         // Scene Graph
         
@@ -264,7 +268,7 @@ Declare_Any_Class( "Main_Scene",
         );
         this.node_spaceship.body.bodyID = "spaceship";
         this.node_spaceship.updateFunctions.push(
-           this.generateGravityFunction(0.18, -10/20) // initial velocity and gravity
+           this.generateGravityFunction(INITIAL_VELOCITY, GRAVITY_CONSTANT) // initial velocity and gravity
        );
         this.node_objectsFrame.addChild(this.node_spaceship);
         
@@ -306,7 +310,6 @@ Declare_Any_Class( "Main_Scene",
         );
         this.sceneGraphBaseNode.addChild(this.node_asteroidFrame);
         
-        
         this.screenScale = 8;
         this.node_beginningScreen = new SceneGraphNode(
             shapes_in_use.square,
@@ -335,11 +338,6 @@ Declare_Any_Class( "Main_Scene",
             false
         );
         
-        
-        // END: Nodes
-        
-        // END: Scene Graph
-        
         if (!hasGetUserMedia()) {
           alert('getUserMedia() is not supported in your browser');
         }
@@ -351,11 +349,8 @@ Declare_Any_Class( "Main_Scene",
            if (currGameState == STATE_BEGIN) {
                currGameState = STATE_PLAYING;
            } else if (currGameState == STATE_PLAYING) {
-               GravityTime = 0;
+               gravityTime = 0;
            } else if (currGameState == STATE_END) {
-               GravityTime = 0;
-               score = 0;
-               spaceshipYPos = (CEILING + FLOOR) / 2;
                this.construct(tempContext);
                currGameState = STATE_BEGIN;
            }
@@ -438,9 +433,11 @@ Declare_Any_Class( "Main_Scene",
         this.lastDrawTime = time;
         
         if (currGameState == STATE_PLAYING) {
+            // Game Difficulty
             ASTEROID_MAX_SPEED = Math.floor((score / 10)) * 4 + 4;
             ASTEROID_MIN_SPEED = Math.floor((score / 10)) * 1 + 1;
             
+            // Collision Detection
             var toKill = [];
             for( var i = 0; i < bodies.length; ++i) 
             { 
@@ -484,14 +481,13 @@ Declare_Any_Class( "Main_Scene",
                 }
             }
 
+            // Spawn Laser
             var barFreqData = getBarFrequencyData();
             var sumAmplitude = 0;
             for (let amp of barFreqData) {
                 sumAmplitude += amp;
             };
             
-            console.log(sumAmplitude);
-
             if (!laserExists && sumAmplitude > AMPLITUDE_THRESHOLD) {
                 var laser_sound = new Audio("res/laser.mp3");
                 laser_sound.volume = 0.4;
@@ -510,7 +506,6 @@ Declare_Any_Class( "Main_Scene",
             score = score + 1/60;
             
             if (this.screenBound) {
-                console.log("UNbinding");
                 if (this.node_beginningScreen)
                     this.sceneGraphBaseNode.removeChild(this.node_beginningScreen);
                 if (this.node_endingScreen)
@@ -526,14 +521,11 @@ Declare_Any_Class( "Main_Scene",
             score = 0;
         } else if (currGameState == STATE_END) {
             if (!this.screenBound) {
-                console.log("binding");
                 this.node_endingScreen.material = getRandomEndingTexture();
                 this.sceneGraphBaseNode.addChild(this.node_endingScreen);
                 this.screenBound = true;
             }
         }
-        
-        this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
         
         // Spawn Smoke
         this.timeSinceLastSmokeSpawn += this.deltaTime;
@@ -541,9 +533,10 @@ Declare_Any_Class( "Main_Scene",
             this.generateNode_smokeParticle();
             this.timeSinceLastSmokeSpawn = 0;
         }
+        
+        this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
 
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
-
     },
     
     'generateGravityFunction' : function(u, g) {
@@ -554,10 +547,10 @@ Declare_Any_Class( "Main_Scene",
         
         return function(node, deltaTime) {
             if (currGameState == STATE_PLAYING) {
-                GravityTime += deltaTime;
+                gravityTime += deltaTime;
 
                 // change in y in either direction
-                var dy = u + g * GravityTime;
+                var dy = u + g * gravityTime;
 
 
                 // ball hits upperbound
@@ -616,25 +609,6 @@ Declare_Any_Class( "Main_Scene",
             );
         };
     },
-    
-    'generateClusterMovementFunction' : function(exhaust_cluster_index) {
-        return function(node, deltaTime) {
-            var index = curExhaustIndex -  DELAY_FACTOR * exhaust_cluster_index;
-            if (index < 0) {
-                index += EXHAUST_HISTORY_ARRAY_SIZE;
-            }
-            var dy = ExhaustHistory[index];
-            node.localMatrix = mult(
-                translation(
-                    0,
-                    dy,
-                    0
-                ),
-                node.localMatrix
-            );
-        };
-    },
-
 
     'generateNode' : function(in_shape, in_material, in_scaleVec, in_rotateAngle, in_rotateVec, in_translationVec) {
         return new SceneGraphNode(
@@ -670,7 +644,7 @@ Declare_Any_Class( "Main_Scene",
         var randScale = Math.random() * SMOKE_PARTICLE_MAX_SCALE;
         var nodeParticle = new SceneGraphNode(
             shapes_in_use["cube"],
-            exhaust_material,
+            EXHAUST_MATERIAL,
             mult(
                 mult(
                     translation(SPACESHIP_X_POS-2.5, spaceshipYPos, 0),
