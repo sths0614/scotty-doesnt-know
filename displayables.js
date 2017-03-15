@@ -87,6 +87,7 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 
 var score;
 var MOMENTUM_MODE = true;
+var TEST_MODE = false;
 
 var gravityTime;
 var INITIAL_VELOCITY = 0.18;
@@ -128,6 +129,9 @@ var STATE_PLAYING = 2;
 var STATE_END = 3;
 
 var currGameState = STATE_BEGIN;
+var timeSinceStart = 0;
+var LOADING_TIME = 0.2;
+var FRAMES_PER_SECOND = 60;
 
 function getRandomEndingTexture() {
     var texturePrefix = "res/ending-screens/dead";
@@ -165,6 +169,7 @@ Declare_Any_Class( "Main_Scene",
         bodies = [];
         laserExists = false;
         gravityTime = 0;
+        timeSinceStart = 0;
         
         shapes_in_use.sphere = new Subdivision_Sphere(5);
         shapes_in_use["shape_asteroid"] = new Shape_From_File("res/asteroid/asteroid.obj");
@@ -312,6 +317,19 @@ Declare_Any_Class( "Main_Scene",
         this.sceneGraphBaseNode.addChild(this.node_asteroidFrame);
         
         this.screenScale = 8;
+        this.node_loadingScreen = new SceneGraphNode(
+            shapes_in_use.square,
+            new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/beginning-screens/loadingTexture.png"),
+            mult(
+                translation(0, 0, 5),
+                scale(this.screenScale,this.screenScale,this.screenScale)
+                ),
+            false,
+            mat4(),
+            "Default",
+            false
+        );
+
         this.node_beginningScreen = new SceneGraphNode(
             shapes_in_use.square,
             new Material(Color(0, 0, 0, 0), 1, 1, 1, 20, "res/beginning-screens/startTexture.png"),
@@ -325,6 +343,7 @@ Declare_Any_Class( "Main_Scene",
             false
         );
         this.screenBound = false;
+        this.loading = false;
         
         this.node_endingScreen = new SceneGraphNode(
             shapes_in_use.square,
@@ -348,12 +367,15 @@ Declare_Any_Class( "Main_Scene",
     {
        controls.add("space", this, function() {
            if (currGameState == STATE_BEGIN) {
-               currGameState = STATE_PLAYING;
+                if (timeSinceStart > LOADING_TIME) {
+                    currGameState = STATE_PLAYING;
+                }
            } else if (currGameState == STATE_PLAYING) {
                gravityTime = 0;
            } else if (currGameState == STATE_END) {
                this.construct(tempContext);
                currGameState = STATE_BEGIN;
+               timeSinceStart = 0;
            }
        });
     },
@@ -432,6 +454,7 @@ Declare_Any_Class( "Main_Scene",
         // Get delta time for animation
         this.deltaTime = (time - this.lastDrawTime)/1000.0;
         this.lastDrawTime = time;
+        timeSinceStart += 1/FRAMES_PER_SECOND;
         
         if (currGameState == STATE_PLAYING) {
             // Game Difficulty
@@ -460,7 +483,9 @@ Declare_Any_Class( "Main_Scene",
 
                     if ((bID == "spaceship" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "spaceship")) {
-                        this.endGame();
+                        if (!TEST_MODE) {
+                            this.endGame();
+                        }
                     } else if ((bID == "laser" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "laser")) {
                         var explosion_sound = new Audio("res/explosion.mp3");
@@ -509,21 +534,37 @@ Declare_Any_Class( "Main_Scene",
                 this.timeSinceLastAsteroidSpawn = 0;
             }
             
-            score = score + 1/60;
+            score = score + 1/FRAMES_PER_SECOND;
             
             if (this.screenBound) {
-                if (this.node_beginningScreen)
+                if (this.node_loadingScreen){
+                    this.sceneGraphBaseNode.removeChild(this.node_loadingScreen);
+                }
+                if (this.node_beginningScreen){
                     this.sceneGraphBaseNode.removeChild(this.node_beginningScreen);
-                if (this.node_endingScreen)
+                }
+                if (this.node_endingScreen){
                     this.sceneGraphBaseNode.removeChild(this.node_endingScreen);
+                }
                 this.screenBound = false;
             }
             
         } else if (currGameState == STATE_BEGIN) {
             if(!this.screenBound) {
+                this.sceneGraphBaseNode.addChild(this.node_loadingScreen);
+                this.screenBound = true;
+                this.loading = true;
+            }
+            if ((timeSinceStart > LOADING_TIME) && (this.loading)) {
+                this.sceneGraphBaseNode.removeChild(this.node_loadingScreen);
                 this.sceneGraphBaseNode.addChild(this.node_beginningScreen);
                 this.screenBound = true;
+                this.loading = false;
             }
+            // if(!this.screenBound) {
+            //     this.sceneGraphBaseNode.addChild(this.node_beginningScreen);
+            //     this.screenBound = true;
+            // }
             score = 0;
         } else if (currGameState == STATE_END) {
             if (!this.screenBound) {
