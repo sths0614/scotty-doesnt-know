@@ -86,6 +86,7 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 };
 
 var score;
+var MOMENTUM_MODE = true;
 
 var gravityTime;
 var INITIAL_VELOCITY = 0.18;
@@ -439,6 +440,7 @@ Declare_Any_Class( "Main_Scene",
             
             // Collision Detection
             var toKill = [];
+            var toSwapSpeed = [];
             for( var i = 0; i < bodies.length; ++i) 
             { 
                 var bnode = bodies[i];
@@ -469,7 +471,11 @@ Declare_Any_Class( "Main_Scene",
                         toKill.push(bnode);
                         toKill.push(cnode);
                     } else if ((bID == cID) && (bID == "asteroid")) {
-                        // TODO: Momentum
+                        if (MOMENTUM_MODE) {
+                            var tmpMV = bnode.speed * bnode.size;
+                            bnode.speed = cnode.speed * cnode.size / bnode.size;
+                            cnode.speed = tmpMV / cnode.size;
+                        }
                     }
                   }
                 }
@@ -598,7 +604,7 @@ Declare_Any_Class( "Main_Scene",
                 translateVectorPerSecond[0] * deltaTime,
                 translateVectorPerSecond[1] * deltaTime,
                 translateVectorPerSecond[2] * deltaTime
-            ];
+            ]; 
             node.localMatrix = mult(
                 translation(
                     transVec[0],
@@ -696,13 +702,23 @@ Declare_Any_Class( "Main_Scene",
         nodeAsteroid.body.bodyID = "asteroid";
         nodeAsteroid.currXLoc = 0;
         nodeAsteroid.totalTime = 0;
-        var speed = -(Math.random() * (ASTEROID_MAX_SPEED - ASTEROID_MIN_SPEED) + ASTEROID_MIN_SPEED);
+        nodeAsteroid.size = randScale;
+        nodeAsteroid.speed = -(Math.random() * (ASTEROID_MAX_SPEED - ASTEROID_MIN_SPEED) + ASTEROID_MIN_SPEED);
         nodeAsteroid.updateFunctions.push(
-            this.generateTranslateFunction([speed, 0, 0])
+            function(node, deltaTime) {
+                node.localMatrix = mult(
+                    translation(
+                        node.speed * deltaTime,
+                        0,
+                        0
+                    ),
+                    node.localMatrix
+                );
+            }
         );
         nodeAsteroid.updateFunctions.push(
             function(node, deltaTime) {
-                node.currXLoc += (deltaTime * speed);
+                node.currXLoc += (deltaTime * node.speed);
                 node.totalTime += deltaTime;
                 if (node.currXLoc < ASTEROID_LIMIT) {
                     node.parent.removeChild(node);
