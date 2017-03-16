@@ -86,6 +86,7 @@ var SceneGraphNode = function(in_shape = null, in_material = null, in_localMatri
 };
 
 var score;
+var highScore = 0;
 var MOMENTUM_MODE = true;
 var TEST_MODE = false;
 
@@ -176,6 +177,7 @@ Declare_Any_Class( "Main_Scene",
         shapes_in_use["shape_ship"] = new Shape_From_File("res/space-ship/jellyfish.obj");
         shapes_in_use["shape_text"] = new Text_Line(35);
         shapes_in_use["shape_textScore"] = new Text_Line(35);
+        shapes_in_use["shape_textHighScore"] = new Text_Line(35);
 
         shapes_in_use["cube"] = new Cube();
         
@@ -304,6 +306,17 @@ Declare_Any_Class( "Main_Scene",
             false
         );
         this.sceneGraphBaseNode.addChild(this.node_textScore);
+
+        this.node_textHighScore = new SceneGraphNode(
+            shapes_in_use["shape_textHighScore"],
+            Color(0, 0, 0, 1),
+            mult(translation(-16, 6.5, 0), scale(0.3,0.3,0.3)),
+            false,
+            null,
+            "Default",
+            false
+        );
+        this.sceneGraphBaseNode.addChild(this.node_textHighScore);
         
         // Asteroid stuff
         this.node_asteroidFrame = new SceneGraphNode(
@@ -535,6 +548,7 @@ Declare_Any_Class( "Main_Scene",
             }
             
             score = score + 1/FRAMES_PER_SECOND;
+            highScore = Math.max(score, highScore);
             
             if (this.screenBound) {
                 if (this.node_loadingScreen){
@@ -582,6 +596,7 @@ Declare_Any_Class( "Main_Scene",
         }
         
         this.node_textScore.body.shape.set_string("Score: " + Math.round(score));
+        this.node_textHighScore.body.shape.set_string("High Score: " + Math.round(highScore));
 
         this.drawSceneGraph(this.deltaTime, this.sceneGraphBaseNode);
     },
