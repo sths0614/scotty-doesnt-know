@@ -108,6 +108,7 @@ function setupCanvas() {
     textureNames.push("res/beginning-screens/startTexture.png");
     textureNames.push("res/beginning-screens/loadingTexture.png");
 
+
     
     for (var i = 1; i <= 7; ++i) {
         textureNames.push("res/ending-screens/dead" + i.toString() + ".png");

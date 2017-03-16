@@ -299,7 +299,7 @@ Declare_Any_Class( "Main_Scene",
         this.node_textScore = new SceneGraphNode(
             shapes_in_use["shape_textScore"],
             Color(0, 0, 0, 1),
-            mult(translation(-16, 7.5, 0), scale(0.3,0.3,0.3)),
+            mult(translation(-16, 6.5, 0), scale(0.3,0.3,0.3)),
             false,
             null,
             "Default",
@@ -310,7 +310,7 @@ Declare_Any_Class( "Main_Scene",
         this.node_textHighScore = new SceneGraphNode(
             shapes_in_use["shape_textHighScore"],
             Color(0, 0, 0, 1),
-            mult(translation(-16, 6.5, 0), scale(0.3,0.3,0.3)),
+            mult(translation(-16, 7.5, 0), scale(0.3,0.3,0.3)),
             false,
             null,
             "Default",
@@ -548,7 +548,6 @@ Declare_Any_Class( "Main_Scene",
             }
             
             score = score + 1/FRAMES_PER_SECOND;
-            highScore = Math.max(score, highScore);
             
             if (this.screenBound) {
                 if (this.node_loadingScreen){
@@ -586,6 +585,7 @@ Declare_Any_Class( "Main_Scene",
                 this.sceneGraphBaseNode.addChild(this.node_endingScreen);
                 this.screenBound = true;
             }
+            highScore = Math.max(score, highScore);
         }
         
         // Spawn Smoke
