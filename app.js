@@ -52,12 +52,12 @@ function setupAudio() {
         barAudioAnalyzer.fftSize = freqData_fftSize;
         barFrequencyData = new Uint8Array(barAudioAnalyzer.frequencyBinCount);   
 
-        var background_music = new Audio("res/vitas.mp3");
+        var background_music = new Audio("res/sounds/vitas.mp3");
         background_music.volume = 0.1;
         background_music.loop = true;
         background_music.play();
 
-        var exhaust_music = new Audio("res/fire.mp3");
+        var exhaust_music = new Audio("res/sounds/fire.mp3");
         exhaust_music.volume = 1.0;
         exhaust_music.loop = true;
         exhaust_music.play();
@@ -98,9 +98,9 @@ function setupCanvas() {
     
     var textureNames = [];
     textureNames.push("text.png");
-    textureNames.push("res/planet.jpg");
+    textureNames.push("res/background/planet.jpg");
     textureNames.push("res/asteroid/ast4.jpg");
-    textureNames.push("res/star.gif");
+    textureNames.push("res/background/star.gif");
     textureNames.push("res/space-ship/exhaust.png");
     textureNames.push("res/space-ship/original-texture.jpg");
     textureNames.push("res/space-ship/laser.jpg");

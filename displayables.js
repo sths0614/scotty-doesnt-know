@@ -206,7 +206,7 @@ Declare_Any_Class( "Main_Scene",
         
         this.node_planet = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.8, 0.9, 0.8, 20, "res/planet.jpg"),
+            new Material(Color(0, 0, 0, 1), 0.8, 0.9, 0.8, 20, "res/background/planet.jpg"),
             mat4(),
             false,
             mat4(),
@@ -232,7 +232,7 @@ Declare_Any_Class( "Main_Scene",
         this.sceneGraphBaseNode.addChild(this.node_backgroundFrame);
         this.node_background = new SceneGraphNode(
             shapes_in_use.sphere,
-            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/star.gif"),
+            new Material(Color(0, 0, 0, 1), 0.9, 0.8, 1, 20, "res/background/star.gif"),
             mat4(),
             false,
             mat4(),
@@ -427,7 +427,7 @@ Declare_Any_Class( "Main_Scene",
             return;
         }
 
-        var crash_sound = new Audio("res/crash.mp3");
+        var crash_sound = new Audio("res/sounds/crash.mp3");
         crash_sound.volume = 1.0;
         crash_sound.loop = false;
         crash_sound.play();
@@ -488,7 +488,7 @@ Declare_Any_Class( "Main_Scene",
                         }
                     } else if ((bID == "laser" && cID == "asteroid") || 
                         (bID == "asteroid" && cID == "laser")) {
-                        var explosion_sound = new Audio("res/explosion.mp3");
+                        var explosion_sound = new Audio("res/sounds/explosion.mp3");
                         explosion_sound.volume = 1.0;
                         explosion_sound.loop = false;
                         explosion_sound.play();
@@ -520,7 +520,7 @@ Declare_Any_Class( "Main_Scene",
             };
             
             if (!laserExists && sumAmplitude > AMPLITUDE_THRESHOLD) {
-                var laser_sound = new Audio("res/laser.mp3");
+                var laser_sound = new Audio("res/sounds/laser.mp3");
                 laser_sound.volume = 0.4;
                 laser_sound.loop = false;
                 laser_sound.play();
